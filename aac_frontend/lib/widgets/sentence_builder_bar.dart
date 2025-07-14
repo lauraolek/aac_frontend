@@ -4,8 +4,27 @@ import 'package:provider/provider.dart';
 import '../providers/communication_provider.dart';
 import '../widgets/communication_item_card.dart';
 
-class SentenceBuilderBar extends StatelessWidget {
+class SentenceBuilderBar extends StatefulWidget {
   const SentenceBuilderBar({super.key});
+
+  @override
+  State<SentenceBuilderBar> createState() => _SentenceBuilderBarState();
+}
+
+class _SentenceBuilderBarState extends State<SentenceBuilderBar> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   void _showClearConfirmationDialog(
     BuildContext context,
@@ -19,9 +38,7 @@ class SentenceBuilderBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(15),
           ),
           title: const Text(AppStrings.clearAllItemsDialogTitle),
-          content: const Text(
-            AppStrings.clearAllItemsDialogContent,
-          ),
+          content: const Text(AppStrings.clearAllItemsDialogContent),
           actions: <Widget>[
             TextButton(
               onPressed: () {
@@ -56,7 +73,6 @@ class SentenceBuilderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Consumer rebuilds only when selectedItems in CommunicationProvider changes
     return Consumer<CommunicationProvider>(
       builder: (context, communicationProvider, child) {
         return Container(
@@ -79,38 +95,37 @@ class SentenceBuilderBar extends StatelessWidget {
           child: Column(
             children: [
               Expanded(
-                child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: communicationProvider.selectedItems.length,
-                        itemBuilder: (context, index) {
-                          final item =
-                              communicationProvider.selectedItems[index];
-                          return Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: SizedBox(
-                              width:
-                                  100,
-                              child: CommunicationItemCard(
-                                item: item,
-                                onTap: () {
-                                  // TODO
-                                },
-                                onLongPress: () {
-                                },
-                                onDoubleTap: () {
-                                  communicationProvider.removeItem(item.id);
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  controller: _scrollController,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    controller: _scrollController,
+                    itemCount: communicationProvider.selectedItems.length,
+                    itemBuilder: (context, index) {
+                      final item = communicationProvider.selectedItems[index];
+                      return Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: SizedBox(
+                          width: 100,
+                          child: CommunicationItemCard(
+                            item: item,
+                            onTap: () {
+                              // TODO
+                            },
+                            onLongPress: () {},
+                            onDoubleTap: () {
+                              communicationProvider.removeItem(item.id);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
