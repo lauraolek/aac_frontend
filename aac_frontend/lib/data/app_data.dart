@@ -1,62 +1,77 @@
+import 'package:aac_app/models/child_profile.dart';
+
 import '../models/category.dart';
 import '../models/communication_item.dart';
 
 final List<Category> dummyCategories = [
   Category(
-    id: 'cat_001',
+    id: 1,
     name: 'Tegevused',
     imageUrl: '',
     items: [
       CommunicationItem(
-          id: 'item_001',
+          id: 1,
           word: 'Sööma',
           imageUrl: ''),
       CommunicationItem(
-          id: 'item_002',
+          id: 2,
           word: 'Jooma',
           imageUrl: ''),
       CommunicationItem(
-          id: 'item_003',
+          id: 3,
           word: 'Mängima',
           imageUrl: ''),
     ],
   ),
   Category(
-    id: 'cat_002',
+    id: 2,
     name: 'Tunded',
     imageUrl: '',
     items: [
       CommunicationItem(
-          id: 'item_006',
+          id: 4,
           word: 'Rõõmus',
           imageUrl: ''),
       CommunicationItem(
-          id: 'item_007',
+          id: 5,
           word: 'Kurb',
           imageUrl: ''),
       CommunicationItem(
-          id: 'item_008',
+          id: 6,
           word: 'Vihane',
           imageUrl: ''),
     ],
   ),
   Category(
-    id: 'cat_003',
+    id: 3,
     name: 'Toit',
     imageUrl: '',
     items: [
       CommunicationItem(
-          id: 'item_010',
+          id: 7,
           word: 'Õun',
           imageUrl: ''),
       CommunicationItem(
-          id: 'item_011',
+          id: 8,
           word: 'Banaan',
           imageUrl: ''),
       CommunicationItem(
-          id: 'item_013',
+          id: 9,
           word: 'Leib',
           imageUrl: ''),
     ],
+  ),
+];
+
+final List<ChildProfile> initialDummyProfiles = [
+  ChildProfile(
+    id: 1,
+    name: 'Sarah',
+    categories: List.from(dummyCategories),
+  ),
+  ChildProfile(
+    id: 2,
+    name: 'John',
+    categories: [],
   ),
 ];

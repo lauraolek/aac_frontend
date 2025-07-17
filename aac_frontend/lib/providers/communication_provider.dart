@@ -16,7 +16,7 @@ class CommunicationProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void removeItem(String itemId) {
+  void removeItem(int itemId) {
     _saveStateForUndo();
     _selectedItems.removeWhere((item) => item.id == itemId);
     notifyListeners();

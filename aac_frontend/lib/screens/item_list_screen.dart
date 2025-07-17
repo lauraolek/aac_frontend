@@ -1,4 +1,6 @@
 import 'package:aac_app/constants/app_strings.dart';
+import 'package:aac_app/providers/profile_provider.dart';
+import 'package:aac_app/widgets/add_item_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/category.dart';
@@ -17,6 +19,8 @@ class ItemListScreen extends StatelessWidget {
   });
 
   void _showItemOptions(BuildContext context, CommunicationItem item) {
+    final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
+    
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -40,8 +44,27 @@ class ItemListScreen extends StatelessWidget {
                 title: const Text(AppStrings.deleteItem),
                 onTap: () {
                   Navigator.pop(bc);
-                  // TODO
-                  print('Delete "${item.word}"');
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text(AppStrings.deleteItem),
+                      content: Text(AppStrings.deleteItemConfirmation(item.word)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: const Text(AppStrings.cancelButton),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await profileProvider.deleteItemFromCategory(category.id, item.id); // Await API call
+                            Navigator.pop(dialogContext);
+                          },
+                          child: const Text(AppStrings.deleteButton),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
               ListTile(
@@ -66,8 +89,23 @@ class ItemListScreen extends StatelessWidget {
       context,
       listen: false,
     );
+    final profileProvider = Provider.of<ProfileProvider>(context);
 
-    return Scaffold(
+    final currentCategoryInProfile = profileProvider.activeChild?.categories.firstWhere(
+      (cat) => cat.id == category.id,
+      orElse: () => category, // fallback if category was deleted or child changed
+    );
+    final List<CommunicationItem> items = currentCategoryInProfile?.items ?? [];
+
+
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          onNavigateBack();
+        }
+      },
+      child: Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(8),
         child: LayoutBuilder(
@@ -99,6 +137,21 @@ class ItemListScreen extends StatelessWidget {
           },
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => AddItemDialog(
+                onAddItem: (word, imageFile) async {
+                  await profileProvider.addItemToCategory(category.id, word, pickedImage: imageFile); // Await API call
+                },
+              ),
+            );
+          },
+          child: const Icon(Icons.add),
+          backgroundColor: Colors.green,
+        ),
+    ),
     );
   }
 }
