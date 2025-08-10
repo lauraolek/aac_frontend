@@ -1,3 +1,4 @@
+import 'package:aac_app/constants/app_strings.dart';
 import 'package:flutter/material.dart';
 import '../models/communication_item.dart';
 
@@ -32,7 +33,7 @@ class CommunicationItemCard extends StatelessWidget {
                   top: Radius.circular(12),
                 ),
                 child: Image.network(
-                  item.imageUrl,
+                  AppStrings.baseUrl + item.imageUrl,
                   fit: BoxFit.cover,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) {

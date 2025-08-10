@@ -1,10 +1,10 @@
 class CommunicationItem {
-  final int id;
+  final int? id;
   final String imageUrl;
   final String word;
 
   CommunicationItem({
-    required this.id,
+    this.id,
     required this.imageUrl,
     required this.word,
   });

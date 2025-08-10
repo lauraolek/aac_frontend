@@ -1,3 +1,4 @@
+import 'package:aac_app/constants/app_strings.dart';
 import 'package:flutter/material.dart';
 import '../models/category.dart';
 
@@ -29,7 +30,7 @@ class CategoryCard extends StatelessWidget {
                   top: Radius.circular(16),
                 ),
                 child: Image.network(
-                  category.imageUrl,
+                  AppStrings.baseUrl + category.imageUrl,
                   fit: BoxFit.cover,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) {

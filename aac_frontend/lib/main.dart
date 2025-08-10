@@ -11,8 +11,11 @@ import 'providers/communication_provider.dart';
 import 'screens/category_grid_screen.dart';
 import 'screens/item_list_screen.dart';
 import 'widgets/sentence_builder_bar.dart';
+import 'screens/auth_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   final apiService = ApiService();
 runApp(
     MultiProvider(
@@ -31,12 +34,63 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AAC App',
+      title: AppStrings.appTitle,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        fontFamily: 'Inter',
+        appBarTheme: AppBarTheme(
+          color: Colors.blue.shade700,
+          titleTextStyle: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: Colors.blue.shade600,
+          foregroundColor: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue.shade600,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.blue.shade700,
+            textStyle: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        dialogTheme: DialogThemeData(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          backgroundColor: Colors.white,
+          titleTextStyle: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+          contentTextStyle: const TextStyle(
+            fontSize: 16,
+            color: Colors.black54,
+          ),
+        ),
       ),
-      home: const MainAppScreen(),
+      home: Consumer<ProfileProvider>(
+        builder: (context, profileProvider, child) {
+          if (!profileProvider.isAuthenticated) {
+            return AuthScreen();
+          }
+          return MainAppScreen();
+        },
+      ),
     );
   }
 }
@@ -48,11 +102,9 @@ class MainAppScreen extends StatefulWidget {
   State<MainAppScreen> createState() => _MainAppScreenState();
 }
 
-final String appBarTitle = 'TODO: nimi';
-
 class _MainAppScreenState extends State<MainAppScreen> {
   Widget? _currentBody;
-  String _currentAppBarTitle = appBarTitle;
+  String _currentAppBarTitle = AppStrings.appTitle;
   bool _showBackButton = false;
 
   @override
@@ -72,7 +124,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
   void _navigateBackToCategories() {
     setState(() {
       _currentBody = CategoryGridScreen(onNavigateToItems: _navigateToCategoryItems);
-      _currentAppBarTitle = appBarTitle;
+      _currentAppBarTitle = AppStrings.appTitle;
       _showBackButton = false;
     });
   }
@@ -100,6 +152,17 @@ class _MainAppScreenState extends State<MainAppScreen> {
                 onPressed: _navigateBackToCategories,
               )
             : null,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await profileProvider.logout();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text(AppStrings.loggedOutSuccessfully)),
+              );
+            },
+          ),
+        ],
       ),
       drawer: Drawer(
         child: Consumer<ProfileProvider>(
@@ -130,6 +193,14 @@ class _MainAppScreenState extends State<MainAppScreen> {
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${AppStrings.loggedInAs}: ${provider.userId ?? AppStrings.notLoggedIn}',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
                         ),
                       ),
                     ],
@@ -166,7 +237,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
                               ),
                               ElevatedButton(
                                 onPressed: () async {
-                                  await provider.deleteChild(profile.id);
+                                  await provider.deleteChild(profile.id!);
                                   Navigator.pop(dialogContext);
 
                                   if (provider.activeChild == null && provider.childProfiles.isNotEmpty) {
@@ -196,8 +267,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
                       context: context,
                       builder: (context) => AddChildDialog(
                         onAddChild: (name) async {
-                          final newChildId = DateTime.now().millisecondsSinceEpoch;
-                          final newChild = ChildProfile(id: newChildId, name: name, categories: []);
+                          final newChild = ChildProfile(name: name, categories: []);
                           await provider.addChild(newChild);
                           provider.setActiveChild(newChild);
                           _navigateBackToCategories();

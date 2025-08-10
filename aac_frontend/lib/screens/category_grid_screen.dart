@@ -50,7 +50,7 @@ class CategoryGridScreen extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            await profileProvider.deleteCategory(category.id);
+                            await profileProvider.deleteCategory(category.id!);
                             Navigator.pop(dialogContext);
                           },
                           child: const Text(AppStrings.deleteButton),
@@ -122,6 +122,7 @@ class CategoryGridScreen extends StatelessWidget {
                       return GridView.builder(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: columns,
+                          childAspectRatio: 0.8,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),

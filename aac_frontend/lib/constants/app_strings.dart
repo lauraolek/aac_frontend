@@ -14,16 +14,17 @@ class AppStrings {
   static const String editCategory = 'Muuda kategooria nime';
   static const String deleteCategory = 'Kustuta kategooria';
   static const String addImageToCategory = 'Lisa ese kategooriasse';
-  static const String newCategoryName = 'Uue kategooria nimi';
   static const String addCategory = 'Lisa kategooria';
   static const String enterCategoryName = 'Sisesta kategooria nimi';
+  static const String categoryName = 'Kategooria nimi';
   static String deleteCategoryConfirmation(String name) { return 'Kas tahad kustutada kategooria ${name}'; }
 
   // Image options
-  static const String selectFromGallery = 'Pildigalerii';
-  static const String takePhoto = 'Kaamera';
+  static const String pickImage = 'Kliki pildi valimiseks';
+  static const String removeImage = 'Eemalda pilt';
 
   // Item Options
+  static const String itemWord = 'Ese';
   static const String editItem = 'Muuda eset';
   static const String deleteItem = 'Kustuta ese';
   static const String moveItem = 'Liiguta eset';
@@ -34,6 +35,7 @@ class AppStrings {
   static String deleteItemConfirmation(String word) {return 'Kas tahad kustutada eseme ${word}';}
 
   // Buttons
+  static const String addButton = 'Lisa';
   static const String undoButton = 'Võta tagasi';
   static const String clearAllButton = 'Kustuta kõik';
   static const String speakButton = 'Räägi';
@@ -44,4 +46,28 @@ class AppStrings {
   static const String clearAllItemsDialogTitle = 'Kustuta kõik?';
   static const String clearAllItemsDialogContent = 'Kas oled kindel, et tahad kõik kustutada?';
 
+  // User Login/Auth
+  static const String loggedInAs = 'Sisselogitud kui';
+  static const String notLoggedIn = 'Pole sisse logitud';
+  static const String loginTitle = 'Logi sisse';
+  static const String registerTitle = 'Registreeri konto';
+  static const String welcomeBack = 'Tere tulemast tagasi!';
+  static const String createAccount = 'Loo konto';
+  static const String username = 'Kasutajanimi';
+  static const String email = 'Email';
+  static const String password = 'Salasõna';
+  static const String loginButton = 'Logi sisse';
+  static const String registerButton = 'Registreeri';
+  static const String pleaseEnterUsername = 'Palun sisesta kasutajanimi';
+  static const String pleaseEnterValidEmail = 'Palun sisesta kehtiv email';
+  static const String passwordTooShort = 'Salasõna peab olema vähemalt 12 sümbolit pikk.';
+  static const String createAccountPrompt = 'Pole kontot? Registreeri';
+  static const String alreadyHaveAccountPrompt = 'Juba on konto? Logi sisse';
+  static const String authError = 'Autentimise viga';
+  static const String loggedInSuccessfully = 'Õnnestunud sisselogimine!';
+  static const String registeredSuccessfully = 'Õnnestunud registreerimine! Palun logi sisse.';
+  static const String loggedOutSuccessfully = 'Õnnestunud väljalogimine.';
+
+  static const String baseUrl = 'http://localhost:8080/api';
+  static const String appTitle = 'AAC';
 }

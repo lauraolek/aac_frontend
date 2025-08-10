@@ -1,38 +1,43 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_strings.dart';
 
-class AddCategoryDialog extends StatefulWidget {
-  final Function(String name, File? imageFile) onAddCategory;
+typedef AddCategoryCallback = void Function(String name, XFile? imageFile);
 
-  const AddCategoryDialog({super.key, required this.onAddCategory});
+class AddCategoryDialog extends StatefulWidget {
+  final AddCategoryCallback onAddCategory;
+
+  const AddCategoryDialog({
+    super.key,
+    required this.onAddCategory,
+  });
 
   @override
-  State<AddCategoryDialog> createState() => _AddCategoryDialogState();
+  _AddCategoryDialogState createState() => _AddCategoryDialogState();
 }
 
 class _AddCategoryDialogState extends State<AddCategoryDialog> {
-  final TextEditingController _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  dynamic _pickedImage; // Can be File (mobile/desktop) or Uint8List (web)
-  final ImagePicker _picker = ImagePicker();
+  final _nameController = TextEditingController();
+  XFile? _pickedImage; // XFile to be platform-agnostic
+  Uint8List? _imageBytes; // for web image preview
 
-  Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await _picker.pickImage(source: source, maxWidth: 300, maxHeight: 300);
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
     if (pickedFile != null) {
+      Uint8List? bytes;
       if (kIsWeb) {
-        final bytes = await pickedFile.readAsBytes();
-        setState(() {
-          _pickedImage = bytes;
-        });
-      } else {
-        setState(() {
-          _pickedImage = File(pickedFile.path);
-        });
+        bytes = await pickedFile.readAsBytes();
       }
+
+      setState(() {
+        _pickedImage = pickedFile;
+        _imageBytes = bytes;
+      });
     }
   }
 
@@ -44,95 +49,91 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
 
   @override
   Widget build(BuildContext context) {
+    Widget imagePreviewWidget;
+    if (_pickedImage != null) {
+      print("KISWEB ${kIsWeb}");
+      print("_imageBytes ${_imageBytes != null}");
+      if (kIsWeb && _imageBytes != null) {
+        // Image.memory for web
+        imagePreviewWidget = Image.memory(_imageBytes!, fit: BoxFit.cover);
+      } else {
+        // Image.file for non-web platforms
+        imagePreviewWidget = Image.file(
+          File(_pickedImage!.path),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey[300],
+              child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+            );
+          },
+        );
+      }
+    } else {
+      imagePreviewWidget = const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
+            SizedBox(height: 8),
+            Text(AppStrings.pickImage),
+          ],
+        ),
+      );
+    }
+
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       title: const Text(AppStrings.addCategory),
       content: Form(
         key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: AppStrings.newCategoryName,
-                hintText: AppStrings.enterCategoryName,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: AppStrings.categoryName),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return AppStrings.enterCategoryName;
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 150,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: imagePreviewWidget,
+                  ),
                 ),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return AppStrings.enterCategoryName;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 15),
-            _pickedImage == null
-                ? Container(
-                    height: 100,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.grey),
-                    ),
-                    child: Icon(Icons.image, size: 50, color: Colors.grey[600]),
-                  )
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: kIsWeb && _pickedImage is Uint8List
-                        ? Image.memory(
-                            _pickedImage as Uint8List,
-                            height: 100,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.file(
-                            _pickedImage as File,
-                            height: 100,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
-                  const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text(AppStrings.selectFromGallery, textAlign: TextAlign.center),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
+              if (_pickedImage != null)
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _pickedImage = null;
+                      _imageBytes = null;
+                    });
+                  },
+                  child: const Text(AppStrings.removeImage),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text(AppStrings.takePhoto, textAlign: TextAlign.center),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      actions: <Widget>[
+      actions: [
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
           child: const Text(AppStrings.cancelButton),
         ),
         ElevatedButton(
@@ -142,7 +143,7 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
               Navigator.of(context).pop();
             }
           },
-          child: const Text(AppStrings.addCategory),
+          child: const Text(AppStrings.addButton),
         ),
       ],
     );

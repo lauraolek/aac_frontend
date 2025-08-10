@@ -76,7 +76,7 @@ class _SentenceBuilderBarState extends State<SentenceBuilderBar> {
     return Consumer<CommunicationProvider>(
       builder: (context, communicationProvider, child) {
         return Container(
-          height: 150,
+          height: 175,
           decoration: BoxDecoration(
             color: Colors.blue.shade50,
             border: Border(
@@ -108,6 +108,7 @@ class _SentenceBuilderBarState extends State<SentenceBuilderBar> {
                         padding: const EdgeInsets.all(4),
                         child: SizedBox(
                           width: 100,
+                          height: 125,
                           child: CommunicationItemCard(
                             item: item,
                             onTap: () {
@@ -115,7 +116,7 @@ class _SentenceBuilderBarState extends State<SentenceBuilderBar> {
                             },
                             onLongPress: () {},
                             onDoubleTap: () {
-                              communicationProvider.removeItem(item.id);
+                              communicationProvider.removeItem(item.id!);
                             },
                           ),
                         ),

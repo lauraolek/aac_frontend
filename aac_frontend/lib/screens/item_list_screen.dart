@@ -56,7 +56,7 @@ class ItemListScreen extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            await profileProvider.deleteItemFromCategory(category.id, item.id); // Await API call
+                            await profileProvider.deleteItemFromCategory(category.id!, item.id!);
                             Navigator.pop(dialogContext);
                           },
                           child: const Text(AppStrings.deleteButton),
@@ -119,12 +119,13 @@ class ItemListScreen extends StatelessWidget {
             return GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: columns,
+                childAspectRatio: 0.8,
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
               ),
-              itemCount: category.items.length,
+              itemCount: items.length,
               itemBuilder: (context, index) {
-                final item = category.items[index];
+                final item = items[index];
                 return CommunicationItemCard(
                   item: item,
                   onTap: () {
@@ -143,7 +144,7 @@ class ItemListScreen extends StatelessWidget {
               context: context,
               builder: (context) => AddItemDialog(
                 onAddItem: (word, imageFile) async {
-                  await profileProvider.addItemToCategory(category.id, word, pickedImage: imageFile); // Await API call
+                  await profileProvider.addItemToCategory(category.id!, word, pickedImage: imageFile); // Await API call
                 },
               ),
             );

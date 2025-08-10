@@ -1,12 +1,12 @@
 import 'category.dart';
 
 class ChildProfile {
-  final int id;
+  final int? id;
   final String name;
-  final List<Category> categories;
+  List<Category> categories;
 
   ChildProfile({
-    required this.id,
+    this.id,
     required this.name,
     required this.categories,
   });
