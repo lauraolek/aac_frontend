@@ -54,7 +54,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
       if (kIsWeb) {
         imagePreviewWidget = Image.memory(
           _imageBytes!,
-          fit: BoxFit.cover,
+          fit: BoxFit.fitHeight,
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
@@ -65,7 +65,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
       } else {
         imagePreviewWidget = Image.file(
           File(_pickedImage!.path),
-          fit: BoxFit.cover,
+          fit: BoxFit.fitHeight,
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],

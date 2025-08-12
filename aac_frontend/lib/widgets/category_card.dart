@@ -31,7 +31,7 @@ class CategoryCard extends StatelessWidget {
                 ),
                 child: Image.network(
                   AppStrings.baseUrl + category.imageUrl,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.fitHeight,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) {
                     // fallback for image loading errors

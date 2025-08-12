@@ -34,7 +34,7 @@ class CommunicationItemCard extends StatelessWidget {
                 ),
                 child: Image.network(
                   AppStrings.baseUrl + item.imageUrl,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.fitHeight,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) {
                     // Fallback for image loading errors

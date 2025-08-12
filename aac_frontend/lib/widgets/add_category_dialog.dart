@@ -55,12 +55,12 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
       print("_imageBytes ${_imageBytes != null}");
       if (kIsWeb && _imageBytes != null) {
         // Image.memory for web
-        imagePreviewWidget = Image.memory(_imageBytes!, fit: BoxFit.cover);
+        imagePreviewWidget = Image.memory(_imageBytes!, fit: BoxFit.fitHeight);
       } else {
         // Image.file for non-web platforms
         imagePreviewWidget = Image.file(
           File(_pickedImage!.path),
-          fit: BoxFit.cover,
+          fit: BoxFit.fitHeight,
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
