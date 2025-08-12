@@ -1,3 +1,4 @@
+import 'package:aac_app/widgets/edit_category_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -29,8 +30,20 @@ class CategoryGridScreen extends StatelessWidget {
                 title: const Text(AppStrings.editCategory),
                 onTap: () {
                   Navigator.pop(bc);
-                  // TODO
-                  print('Edit ${category.name}');
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) => EditCategoryDialog(
+                      category: category,
+                      onEditCategory: (newName, newImageFile) async {
+                        await profileProvider.editCategory(
+                          category.id!,
+                          newName,
+                          newImageFile: newImageFile,
+                          currentImageUrl: category.imageUrl,
+                        );
+                      },
+                    ),
+                  );
                 },
               ),
               ListTile(

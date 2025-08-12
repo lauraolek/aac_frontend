@@ -287,7 +287,7 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
     }
   }
 
-  Future<void> editItemInCategory(int categoryId, int itemId, String newWord, {File? newImageFile, String? currentImageUrl}) async {
+  Future<void> editItemInCategory(int categoryId, int itemId, String newWord, {XFile? newImageFile, String? currentImageUrl}) async {
     if (_userId == null || _activeChild == null) {
       print('ProfileProvider: Not logged in, userId is null, or no active child to edit item for.');
       return;

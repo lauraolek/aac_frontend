@@ -1,6 +1,7 @@
 import 'package:aac_app/constants/app_strings.dart';
 import 'package:aac_app/providers/profile_provider.dart';
 import 'package:aac_app/widgets/add_item_dialog.dart';
+import 'package:aac_app/widgets/edit_item_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/category.dart';
@@ -35,8 +36,21 @@ class ItemListScreen extends StatelessWidget {
                 title: const Text(AppStrings.editItem),
                 onTap: () {
                   Navigator.pop(bc);
-                  // TODO
-                  print('Edit "${item.word}"');
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) => EditItemDialog(
+                      item: item,
+                      onEditItem: (newWord, newImageFile) async {
+                        await profileProvider.editItemInCategory(
+                          category.id!,
+                          item.id!,
+                          newWord,
+                          newImageFile: newImageFile,
+                          currentImageUrl: item.imageUrl,
+                        );
+                      },
+                    ),
+                  );
                 },
               ),
               ListTile(
@@ -144,7 +158,7 @@ class ItemListScreen extends StatelessWidget {
               context: context,
               builder: (context) => AddItemDialog(
                 onAddItem: (word, imageFile) async {
-                  await profileProvider.addItemToCategory(category.id!, word, pickedImage: imageFile); // Await API call
+                  await profileProvider.addItemToCategory(category.id!, word, pickedImage: imageFile);
                 },
               ),
             );

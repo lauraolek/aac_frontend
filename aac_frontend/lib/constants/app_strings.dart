@@ -8,16 +8,16 @@ class AppStrings {
   static const String childProfiles = 'Laste profiilid';
   static const String activeChild = 'Valitud laps';
   static const String noActiveChild = 'Ühtki lapse profiili pole valitud';
-  static String deleteChildConfirmation(String name) => 'Kas tahad kindlasti lapse ${name} profiili kustutada?';
+  static String deleteChildConfirmation(String name) => 'Kas tahad kindlasti lapse "${name}" profiili kustutada?';
 
   // Category Options
-  static const String editCategory = 'Muuda kategooria nime';
+  static const String editCategory = 'Muuda kategooriat';
   static const String deleteCategory = 'Kustuta kategooria';
   static const String addImageToCategory = 'Lisa ese kategooriasse';
   static const String addCategory = 'Lisa kategooria';
   static const String enterCategoryName = 'Sisesta kategooria nimi';
   static const String categoryName = 'Kategooria nimi';
-  static String deleteCategoryConfirmation(String name) { return 'Kas tahad kustutada kategooria ${name}'; }
+  static String deleteCategoryConfirmation(String name) { return 'Kas tahad kustutada kategooria "${name}"'; }
 
   // Image options
   static const String pickImage = 'Kliki pildi valimiseks';
@@ -32,7 +32,7 @@ class AppStrings {
   static const String newItemWord = 'Uus eseme nimi';
   static const String enterItemWord = 'Sisesta eseme nimi';
   static const String addItemButton = 'Lisa ese';
-  static String deleteItemConfirmation(String word) {return 'Kas tahad kustutada eseme ${word}';}
+  static String deleteItemConfirmation(String word) {return 'Kas tahad kustutada eseme "${word}"';}
 
   // Buttons
   static const String addButton = 'Lisa';

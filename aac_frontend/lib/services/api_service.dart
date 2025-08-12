@@ -262,7 +262,7 @@ Future<List<Category>> fetchCategories(int profileId) async {
 
     if (newImageFile != null) {
       request.files.add(http.MultipartFile.fromBytes(
-        'image',
+        'imageFile',
         await newImageFile.readAsBytes(),
         filename: newImageFile.name,
       ));
@@ -355,16 +355,20 @@ Future<List<Category>> fetchCategories(int profileId) async {
     }
   }
 
-  Future<void> editItemInCategory(String userId, int childId, int categoryId, int itemId, String newWord, {File? newImageFile, String? currentImageUrl}) async {
+  Future<void> editItemInCategory(String userId, int childId, int categoryId, int itemId, String newWord, {XFile? newImageFile, String? currentImageUrl}) async {
     print('ApiService: Editing item $itemId in category $categoryId for child $childId for user $userId...');
     final url = Uri.parse('${AppStrings.baseUrl}/imagewords/$itemId');
 
     final request = http.MultipartRequest('PUT', url)
       ..headers.addAll(_getHeaders(includeAuth: true))
-      ..fields['word'] = newWord;
+      ..fields['wordText'] = newWord;
     
     if (newImageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath('image', newImageFile.path));
+      request.files.add(http.MultipartFile.fromBytes(
+        'imageFile',
+        await newImageFile.readAsBytes(),
+        filename: newImageFile.name,
+      ));
       print('ApiService: Editing item with new image file: ${newImageFile.path}');
     } else {
       request.fields['imageUrl'] = currentImageUrl ?? 'https://placehold.co/100x100/CCCCCC/000000?text=Item';
