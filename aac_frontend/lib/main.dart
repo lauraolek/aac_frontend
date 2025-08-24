@@ -269,7 +269,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
                         onAddChild: (name) async {
                           final newChild = ChildProfile(name: name, categories: []);
                           await provider.addChild(newChild);
-                          provider.setActiveChild(newChild);
                           _navigateBackToCategories();
                         },
                       ),

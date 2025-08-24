@@ -120,7 +120,7 @@ class ApiService {
     }
   }
 
-  Future<void> addChildProfile(String userId, ChildProfile profile) async {
+  Future<ChildProfile> addChildProfile(String userId, ChildProfile profile) async {
     print('ApiService: Adding child profile ${profile.name} for user $userId...');
     final url = Uri.parse('${AppStrings.baseUrl}/profiles/user/$userId');
     try {
@@ -132,6 +132,7 @@ class ApiService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('ApiService: Child profile added successfully.');
+        return ChildProfile.fromMap(json.decode(response.body));
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized: Please log in again.');
       } else {

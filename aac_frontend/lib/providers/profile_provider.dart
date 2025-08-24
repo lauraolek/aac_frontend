@@ -143,7 +143,9 @@ class ProfileProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      await _apiService.addChildProfile(_userId!, profile);
+      final newProfile = await _apiService.addChildProfile(_userId!, profile);
+      _childProfiles.add(newProfile);
+      setActiveChild(newProfile);
       await _fetchChildProfiles();
       print('ProfileProvider: Child ${profile.name} added and state refreshed.');
     } catch (e) {
@@ -174,9 +176,11 @@ class ProfileProvider with ChangeNotifier {
   }
 
   void setActiveChild(ChildProfile? profile) {
-    _activeChild = profile;
-    notifyListeners();
-    print('ProfileProvider: Active child set to ${profile?.name ?? 'null'}.');
+    if (_activeChild?.id != profile?.id) {
+      _activeChild = profile;
+      notifyListeners();
+      print('ProfileProvider: Active child set to ${profile?.name ?? 'null'}.');
+    }
   }
 
   // --- Category Management for Active Child (via API service) ---
