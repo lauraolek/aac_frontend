@@ -166,9 +166,22 @@ class _SentenceBuilderBarState extends State<SentenceBuilderBar> {
                       ),
                     ),
                     ElevatedButton.icon(
-                      onPressed: communicationProvider.speakSentence,
-                      icon: const Icon(Icons.volume_up),
-                      label: const Text(AppStrings.speakButton),
+                      onPressed: communicationProvider.isSpeaking
+                          ? null
+                          : () {
+                              communicationProvider.speakSentence();
+                            },
+                      icon: communicationProvider.isSpeaking
+                          ? const CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            )
+                          : const Icon(Icons.volume_up),
+                      label: Text(
+                        communicationProvider.isSpeaking
+                            ? 'Laadib...'
+                            : AppStrings.speakButton,
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green.shade600,
                         foregroundColor: Colors.white,

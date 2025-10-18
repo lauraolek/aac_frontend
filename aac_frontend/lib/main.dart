@@ -14,14 +14,20 @@ import 'widgets/sentence_builder_bar.dart';
 import 'screens/auth_screen.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  final apiService = ApiService();
 runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => ProfileProvider(apiService)),
-        ChangeNotifierProvider(create: (context) => CommunicationProvider()),
+        Provider<ApiService>(create: (_) => ApiService()),
+        ChangeNotifierProxyProvider<ApiService, ProfileProvider>(
+          create: (context) => ProfileProvider(context.read<ApiService>()),
+          update: (context, apiService, previousProfileProvider) =>
+              previousProfileProvider!..apiService = apiService,
+        ),
+        ChangeNotifierProxyProvider<ApiService, CommunicationProvider>(
+          create: (context) => CommunicationProvider(context.read<ApiService>()),
+          update: (context, apiService, previousCommunicationProvider) =>
+              previousCommunicationProvider!..apiService = apiService,
+        ),
       ],
       child: const MyApp(),
     ),

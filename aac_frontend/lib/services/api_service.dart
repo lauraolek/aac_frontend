@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:aac_app/constants/app_strings.dart';
+import 'package:aac_app/models/conjugation_sentence.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../models/child_profile.dart';
@@ -193,6 +194,7 @@ Future<List<Category>> fetchCategories(int profileId) async {
 
   Future<void> addCategory(String userId, int childId, String categoryName, {XFile? imageFile}) async {
     print('ApiService: Adding category $categoryName to child $childId for user $userId...');
+    print(_authToken);
     final url = Uri.parse('${AppStrings.baseUrl}/categories/profile/$childId');
 
     final request = http.MultipartRequest('POST', url)
@@ -391,6 +393,46 @@ Future<List<Category>> fetchCategories(int profileId) async {
     } catch (e) {
       print('ApiService Exception during editItemInCategory: $e');
       throw Exception('Network error or invalid response during edit item: $e');
+    }
+  }
+
+
+  // -- Audio and conjugation --
+  Future<Map<String, dynamic>> getAudioAndConjugate(List<String> words) async {
+    print('ApiService: Requesting conjugation and audio for words: $words');
+    final url = Uri.parse('${AppStrings.baseUrl}/text/process');
+
+    try {
+      final sentence = ConjugationSentence(sentence: words.join(', '));
+
+      final response = await http.post(
+        url,
+        headers: _getHeaders(),
+        body: json.encode(sentence.toMap()),
+      );      
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('ApiService: Conjugation and audio done successfully.');
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized: Please log in again.');
+      } else {
+        final errorBody = json.decode(response.body);
+        print('ApiService Error: Conjugation and audio failed: ${response.statusCode} - ${errorBody['message']}');
+        throw Exception(errorBody['message'] ?? 'Failed to conjugate and get audio');
+      }
+
+      final conjugatedWords = response.body.replaceAll("'", "").split(",");
+      
+      const mockAudioUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+
+      print('ApiService: Received conjugated text and audio URL from mock backend.');
+      return {
+        'conjugatedWords': conjugatedWords,
+        'audioUrl': mockAudioUrl,
+      };
+    } catch (e) {
+      print('ApiService Exception during addItemToCategory: $e');
+      throw Exception('Network error or invalid response during add item: $e');
     }
   }
 }

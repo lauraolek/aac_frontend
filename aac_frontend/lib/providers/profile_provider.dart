@@ -7,7 +7,7 @@ import '../models/child_profile.dart';
 import '../services/api_service.dart';
 
 class ProfileProvider with ChangeNotifier {
-  final ApiService _apiService;
+  ApiService _apiService;
   List<ChildProfile> _childProfiles = [];
   ChildProfile? _activeChild;
   bool _isLoading = false;
@@ -22,6 +22,11 @@ class ProfileProvider with ChangeNotifier {
 
   ProfileProvider(this._apiService) {
     _loadAuthToken();
+  }
+
+  set apiService(ApiService apiService) {
+    _apiService = apiService;
+    notifyListeners();
   }
 
   Future<void> _loadAuthToken() async {
