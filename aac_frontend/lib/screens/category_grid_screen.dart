@@ -74,15 +74,6 @@ class CategoryGridScreen extends StatelessWidget {
                   );
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.add_photo_alternate),
-                title: const Text(AppStrings.addImageToCategory),
-                onTap: () {
-                  Navigator.pop(bc);
-                  // TODO
-                  print('Add image to ${category.name}');
-                },
-              ),
             ],
           ),
         );

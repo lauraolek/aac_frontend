@@ -13,7 +13,6 @@ class AppStrings {
   // Category Options
   static const String editCategory = 'Muuda kategooriat';
   static const String deleteCategory = 'Kustuta kategooria';
-  static const String addImageToCategory = 'Lisa ese kategooriasse';
   static const String addCategory = 'Lisa kategooria';
   static const String enterCategoryName = 'Sisesta kategooria nimi';
   static const String categoryName = 'Kategooria nimi';
@@ -27,7 +26,6 @@ class AppStrings {
   static const String itemWord = 'Ese';
   static const String editItem = 'Muuda eset';
   static const String deleteItem = 'Kustuta ese';
-  static const String moveItem = 'Liiguta eset';
   static const String addItem = 'Lisa ese';
   static const String newItemWord = 'Uus eseme nimi';
   static const String enterItemWord = 'Sisesta eseme nimi';

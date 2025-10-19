@@ -81,15 +81,6 @@ class ItemListScreen extends StatelessWidget {
                   );
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.drive_file_move),
-                title: const Text(AppStrings.moveItem),
-                onTap: () {
-                  Navigator.pop(bc);
-                  // TODO
-                  print('Move "${item.word}"');
-                },
-              ),
             ],
           ),
         );

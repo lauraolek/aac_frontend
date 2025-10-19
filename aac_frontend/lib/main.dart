@@ -14,7 +14,7 @@ import 'widgets/sentence_builder_bar.dart';
 import 'screens/auth_screen.dart';
 
 void main() {
-runApp(
+  runApp(
     MultiProvider(
       providers: [
         Provider<ApiService>(create: (_) => ApiService()),
@@ -202,13 +202,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        '${AppStrings.loggedInAs}: ${provider.userId ?? AppStrings.notLoggedIn}',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
                     ],
                   ),
                 ),
