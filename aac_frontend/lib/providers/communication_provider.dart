@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-//import 'package:just_audio/just_audio.dart';
+import 'package:just_audio/just_audio.dart';
 import '../services/api_service.dart';
 import '../models/communication_item.dart';
 
@@ -7,7 +7,7 @@ class CommunicationProvider with ChangeNotifier {
   ApiService _apiService;
   final List<CommunicationItem> _selectedItems = [];
   final List<List<CommunicationItem>> _undoStack = [];
-  //final _audioPlayer = AudioPlayer();
+  final _audioPlayer = AudioPlayer();
   bool _isSpeaking = false;
   
   CommunicationProvider(this._apiService);
@@ -58,23 +58,40 @@ class CommunicationProvider with ChangeNotifier {
     try {
       final wordsToConjugate = _selectedItems.map((item) => item.word).toList();
       final response = await _apiService.getAudioAndConjugate(wordsToConjugate);
-      final List<String> conjugatedWords = List<String>.from(response['conjugatedWords']!);
-      //final audioUrl = response['audioUrl']!;
 
-      if (conjugatedWords.length == _selectedItems.length) {
+      if (response.conjugatedWords.length == _selectedItems.length) {
         for (int i = 0; i < _selectedItems.length; i++) {
-          _selectedItems[i] = _selectedItems[i].copyWith(word: conjugatedWords[i]);
+          _selectedItems[i] = _selectedItems[i].copyWith(word: response.conjugatedWords[i]);
         }
       }
       notifyListeners();
 
-      //await _audioPlayer.setUrl(audioUrl);
-      //await _audioPlayer.play();
+      playAudioFromBytes(response.audioBase64);
     } catch (e) {
       print('Failed to get audio from backend: $e');
     } finally {
       _isSpeaking = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> playAudioFromBytes(String audioBytes) async {
+    // Ensure the player is stopped before loading new audio
+    await _audioPlayer.stop(); 
+
+    final String audioUrl = 'data:audio/wav;base64,$audioBytes';
+
+    try {
+      await _audioPlayer.setAudioSource(
+        AudioSource.uri(
+          Uri.parse(audioUrl)
+        ),
+      );
+
+      await _audioPlayer.play();
+      print("Playback started successfully.");
+    } catch (e) {
+      print("Error setting audio source or playing: $e");
     }
   }
 
@@ -85,7 +102,7 @@ class CommunicationProvider with ChangeNotifier {
   
   @override
   void dispose() {
-    //_audioPlayer.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 }

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:aac_app/constants/app_strings.dart';
+import 'package:aac_app/models/conjugation_and_audio_result.dart';
 import 'package:aac_app/models/conjugation_sentence.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -398,18 +400,20 @@ Future<List<Category>> fetchCategories(int profileId) async {
 
 
   // -- Audio and conjugation --
-  Future<Map<String, dynamic>> getAudioAndConjugate(List<String> words) async {
+  Future<ConjugationAndAudioResult> getAudioAndConjugate(List<String> words) async {
     print('ApiService: Requesting conjugation and audio for words: $words');
     final url = Uri.parse('${AppStrings.baseUrl}/text/process');
 
     try {
       final sentence = ConjugationSentence(sentence: words.join(', '));
 
-      final response = await http.post(
-        url,
-        headers: _getHeaders(),
-        body: json.encode(sentence.toMap()),
-      );      
+      final request = http.Request('POST', url);
+      request.headers['Content-Type'] = 'application/json';
+      request.headers['Authorization'] = 'Bearer $_authToken';
+      request.body = json.encode(sentence.toMap());
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
       
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('ApiService: Conjugation and audio done successfully.');
@@ -421,18 +425,16 @@ Future<List<Category>> fetchCategories(int profileId) async {
         throw Exception(errorBody['message'] ?? 'Failed to conjugate and get audio');
       }
 
-      final conjugatedWords = response.body.replaceAll("'", "").split(",");
-      
-      const mockAudioUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+      final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
 
-      print('ApiService: Received conjugated text and audio URL from mock backend.');
-      return {
-        'conjugatedWords': conjugatedWords,
-        'audioUrl': mockAudioUrl,
-      };
+      final String base64Audio = jsonResponse['audioBase64'];
+      final conjugatedWords = jsonResponse['sentence'].replaceAll("'", "").split(",");
+      
+      print('ApiService: Received conjugated text and audio URL.');
+      return ConjugationAndAudioResult(conjugatedWords: conjugatedWords, audioBase64: base64Audio);
     } catch (e) {
-      print('ApiService Exception during addItemToCategory: $e');
-      throw Exception('Network error or invalid response during add item: $e');
+      print('ApiService Exception during getAudioAndConjugate: $e');
+      throw Exception('Network error or invalid response during getAudioAndConjugate: $e');
     }
   }
 }
