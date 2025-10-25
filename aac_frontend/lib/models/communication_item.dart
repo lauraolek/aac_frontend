@@ -2,14 +2,18 @@ class CommunicationItem {
   final int? id;
   final String imageUrl;
   final String word;
+  int? sequence;
+  String? conjugatedWord;
 
   CommunicationItem({
     this.id,
     required this.imageUrl,
     required this.word,
+    this.sequence,
+    this.conjugatedWord
   });
 
-Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
       'imageUrl': imageUrl,
@@ -25,15 +29,19 @@ Map<String, dynamic> toMap() {
     );
   }
 
-    CommunicationItem copyWith({
+  CommunicationItem copyWith({
     int? id,
     String? imageUrl,
     String? word,
+    int? sequence,
+    String? conjugatedWord
   }) {
     return CommunicationItem(
       id: id ?? this.id,
       imageUrl: imageUrl ?? this.imageUrl,
       word: word ?? this.word,
+      sequence: sequence ?? this.sequence,
+      conjugatedWord: conjugatedWord ?? this.conjugatedWord
     );
   }
 

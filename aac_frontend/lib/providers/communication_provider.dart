@@ -9,6 +9,7 @@ class CommunicationProvider with ChangeNotifier {
   final List<List<CommunicationItem>> _undoStack = [];
   final _audioPlayer = AudioPlayer();
   bool _isSpeaking = false;
+  int counter = 0;
   
   CommunicationProvider(this._apiService);
 
@@ -21,14 +22,17 @@ class CommunicationProvider with ChangeNotifier {
   bool get isSpeaking => _isSpeaking;
 
   void addItem(CommunicationItem item) {
+    counter++;
+    item.sequence = counter;
+    
     _saveStateForUndo();
-    _selectedItems.add(item);
+    _selectedItems.add(item.copyWith());
     notifyListeners();
   }
 
-  void removeItem(int itemId) {
+  void removeItem(int sequence) {
     _saveStateForUndo();
-    _selectedItems.removeWhere((item) => item.id == itemId);
+    _selectedItems.removeWhere((item) => item.sequence == sequence);
     notifyListeners();
   }
 
@@ -42,6 +46,7 @@ class CommunicationProvider with ChangeNotifier {
 
   void clearAllItems() {
     if (_selectedItems.isNotEmpty) {
+      counter = 0;
       _saveStateForUndo();
       _selectedItems.clear();
       _undoStack.clear();

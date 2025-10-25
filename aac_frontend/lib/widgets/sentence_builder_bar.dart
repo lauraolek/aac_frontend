@@ -116,7 +116,7 @@ class _SentenceBuilderBarState extends State<SentenceBuilderBar> {
                             },
                             onLongPress: () {},
                             onDoubleTap: () {
-                              communicationProvider.removeItem(item.id!);
+                              communicationProvider.removeItem(item.sequence!);
                             },
                           ),
                         ),
