@@ -166,7 +166,7 @@ class _SentenceBuilderBarState extends State<SentenceBuilderBar> {
                       ),
                     ),
                     ElevatedButton.icon(
-                      onPressed: communicationProvider.isSpeaking
+                      onPressed: communicationProvider.isSpeaking || communicationProvider.isConjugating
                           ? null
                           : () {
                               communicationProvider.speakSentence();

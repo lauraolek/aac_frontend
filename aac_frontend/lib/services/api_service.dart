@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:aac_app/constants/app_strings.dart';
+import 'package:aac_app/models/communication_item.dart';
 import 'package:aac_app/models/conjugation_and_audio_result.dart';
 import 'package:aac_app/models/conjugation_sentence.dart';
 import 'package:http/http.dart' as http;
@@ -400,17 +401,15 @@ Future<List<Category>> fetchCategories(int profileId) async {
 
 
   // -- Audio and conjugation --
-  Future<ConjugationAndAudioResult> getAudioAndConjugate(List<String> words) async {
+  Future<ConjugationAndAudioResult> getAudioAndConjugate(List<CommunicationItem> words) async {
     print('ApiService: Requesting conjugation and audio for words: $words');
     final url = Uri.parse('${AppStrings.baseUrl}/text/process');
 
     try {
-      final sentence = ConjugationSentence(sentence: words.join(', '));
-
       final request = http.Request('POST', url);
       request.headers['Content-Type'] = 'application/json';
       request.headers['Authorization'] = 'Bearer $_authToken';
-      request.body = json.encode(sentence.toMap());
+      request.body = '{"sentence": ${jsonEncode(words.map((x) => x.toMap()).toList())}}';
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -428,13 +427,83 @@ Future<List<Category>> fetchCategories(int profileId) async {
       final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
 
       final String base64Audio = jsonResponse['audioBase64'];
-      final conjugatedWords = jsonResponse['sentence'].replaceAll("'", "").split(",");
+      final List<CommunicationItem> conjugatedItems = (jsonResponse['sentence'] as List<dynamic>)
+          .map((jsonItem) => CommunicationItem.fromMap(jsonItem as Map<String, dynamic>))
+          .toList();
       
       print('ApiService: Received conjugated text and audio URL.');
-      return ConjugationAndAudioResult(conjugatedWords: conjugatedWords, audioBase64: base64Audio);
+      return ConjugationAndAudioResult(conjugatedWords: conjugatedItems, audioBase64: base64Audio);
     } catch (e) {
       print('ApiService Exception during getAudioAndConjugate: $e');
       throw Exception('Network error or invalid response during getAudioAndConjugate: $e');
+    }
+  }
+
+  Future<List<CommunicationItem>> getConjugate(List<CommunicationItem> words) async {
+    print('ApiService: Requesting conjugation for words: $words');
+    final url = Uri.parse('${AppStrings.baseUrl}/text/conjugate');
+
+    try {
+      final request = http.Request('POST', url);
+      request.headers['Content-Type'] = 'application/json';
+      request.headers['Authorization'] = 'Bearer $_authToken';
+      request.body = '{"sentence": ${jsonEncode(words.map((x) => x.toMap()).toList())}}';
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('ApiService: Conjugation done successfully.');
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized: Please log in again.');
+      } else {
+        final errorBody = json.decode(response.body);
+        print('ApiService Error: Conjugation failed: ${response.statusCode} - ${errorBody['message']}');
+        throw Exception(errorBody['message'] ?? 'Failed to conjugate');
+      }
+      print("here");
+      final List<dynamic> jsonResponse = jsonDecode(response.body);
+      print(jsonResponse);
+      final List<CommunicationItem> conjugatedItems = jsonResponse
+          .map((jsonItem) => CommunicationItem.fromMap(jsonItem as Map<String, dynamic>))
+          .toList();
+      
+      print('ApiService: Received conjugated text.');
+      return conjugatedItems;
+    } catch (e) {
+      print('ApiService Exception during getConjugate: $e');
+      throw Exception('Network error or invalid response during getConjugate: $e');
+    }
+  }
+
+  Future<String> getAudio(List<CommunicationItem> words) async {
+    print('ApiService: Requesting audio for words: $words');
+    final url = Uri.parse('${AppStrings.baseUrl}/text/audio');
+
+    try {
+      final request = http.Request('POST', url);
+      request.headers['Content-Type'] = 'application/json';
+      request.headers['Authorization'] = 'Bearer $_authToken';
+      request.body = '{"sentence": ${jsonEncode(words.map((x) => x.displayedWord).toList())}}';
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('ApiService: Audio done successfully.');
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized: Please log in again.');
+      } else {
+        final errorBody = json.decode(response.body);
+        print('ApiService Error: Audio failed: ${response.statusCode} - ${errorBody['message']}');
+        throw Exception(errorBody['message'] ?? 'Failed to get audio');
+      }
+ 
+      print('ApiService: Received audio URL.');
+      return response.body;
+    } catch (e) {
+      print('ApiService Exception during getAudio: $e');
+      throw Exception('Network error or invalid response during getAudio: $e');
     }
   }
 }

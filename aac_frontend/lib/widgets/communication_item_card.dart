@@ -53,7 +53,7 @@ class CommunicationItemCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(6),
               child: Text(
-                item.word,
+                item.displayedWord ?? item.word,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 16,

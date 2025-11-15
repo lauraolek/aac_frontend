@@ -1,5 +1,7 @@
+import 'package:aac_app/models/communication_item.dart';
+
 class ConjugationAndAudioResult {
-  final List<String> conjugatedWords;
+  final List<CommunicationItem> conjugatedWords;
   final String audioBase64;
 
   ConjugationAndAudioResult({
@@ -9,7 +11,7 @@ class ConjugationAndAudioResult {
 
   factory ConjugationAndAudioResult.fromJson(Map<String, dynamic> json) {
     final words = (json['conjugatedWords'] as List<dynamic>?)
-        ?.map((e) => e.toString())
+        ?.map((e) => CommunicationItem.fromMap(e))
         .toList() ?? [];
 
     return ConjugationAndAudioResult(

@@ -9,6 +9,7 @@ class CommunicationProvider with ChangeNotifier {
   final List<List<CommunicationItem>> _undoStack = [];
   final _audioPlayer = AudioPlayer();
   bool _isSpeaking = false;
+  bool _isConjugating = false;
   int counter = 0;
   
   CommunicationProvider(this._apiService);
@@ -20,13 +21,16 @@ class CommunicationProvider with ChangeNotifier {
 
   List<CommunicationItem> get selectedItems => _selectedItems;
   bool get isSpeaking => _isSpeaking;
+  bool get isConjugating => _isConjugating;
 
   void addItem(CommunicationItem item) {
     counter++;
     item.sequence = counter;
+    item.displayedWord = item.word;
     
     _saveStateForUndo();
     _selectedItems.add(item.copyWith());
+    getConjugation();
     notifyListeners();
   }
 
@@ -54,24 +58,44 @@ class CommunicationProvider with ChangeNotifier {
     }
   }
 
+  Future<void> getConjugation() async {
+    if (_selectedItems.isEmpty) return;
+
+    _isConjugating = true;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.getConjugate(_selectedItems);
+
+      for (int i = 0; i < _selectedItems.length; i++) {
+        try {
+          final CommunicationItem match = response.firstWhere((x) => x.word == selectedItems[i].word);
+          selectedItems[i].displayedWord = match.conjugatedWord!;
+        } catch (e) {
+          if (e is StateError) {
+            // match was null, do nothing
+          } else {
+            rethrow;
+          }
+        }
+      }
+    } catch (e) {
+      print('Failed to get conjugation: $e');
+    } finally {
+      _isConjugating = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> speakSentence() async {
-    if (_selectedItems.isEmpty || _isSpeaking) return;
+    if (_selectedItems.isEmpty || _isSpeaking || _isConjugating) return;
 
     _isSpeaking = true;
     notifyListeners();
 
     try {
-      final wordsToConjugate = _selectedItems.map((item) => item.word).toList();
-      final response = await _apiService.getAudioAndConjugate(wordsToConjugate);
-
-      if (response.conjugatedWords.length == _selectedItems.length) {
-        for (int i = 0; i < _selectedItems.length; i++) {
-          _selectedItems[i] = _selectedItems[i].copyWith(word: response.conjugatedWords[i]);
-        }
-      }
-      notifyListeners();
-
-      playAudioFromBytes(response.audioBase64);
+      final response = await _apiService.getAudio(_selectedItems);
+      playAudioFromBytes(response);
     } catch (e) {
       print('Failed to get audio from backend: $e');
     } finally {
