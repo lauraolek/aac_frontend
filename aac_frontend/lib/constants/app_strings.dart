@@ -67,5 +67,6 @@ class AppStrings {
   static const String loggedOutSuccessfully = 'Õnnestunud väljalogimine.';
 
   static const String baseUrl = 'http://localhost:8080/api';
+  static const String fastapiUrl = 'http://127.0.0.1:8000/api/v1';
   static const String appTitle = 'AAC';
 }

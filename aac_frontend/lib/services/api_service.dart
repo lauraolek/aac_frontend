@@ -441,7 +441,7 @@ Future<List<Category>> fetchCategories(int profileId) async {
 
   Future<List<CommunicationItem>> getConjugate(List<CommunicationItem> words) async {
     print('ApiService: Requesting conjugation for words: $words');
-    final url = Uri.parse('${AppStrings.baseUrl}/text/conjugate');
+    final url = Uri.parse('${AppStrings.fastapiUrl}/estnltk/convert');
 
     try {
       final request = http.Request('POST', url);
@@ -461,10 +461,10 @@ Future<List<Category>> fetchCategories(int profileId) async {
         print('ApiService Error: Conjugation failed: ${response.statusCode} - ${errorBody['message']}');
         throw Exception(errorBody['message'] ?? 'Failed to conjugate');
       }
+      final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
       print("here");
-      final List<dynamic> jsonResponse = jsonDecode(response.body);
       print(jsonResponse);
-      final List<CommunicationItem> conjugatedItems = jsonResponse
+      final List<CommunicationItem> conjugatedItems = (jsonResponse['sentence'] as List<dynamic>)
           .map((jsonItem) => CommunicationItem.fromMap(jsonItem as Map<String, dynamic>))
           .toList();
       
