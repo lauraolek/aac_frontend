@@ -23,22 +23,64 @@ class _AddItemDialogState extends State<AddItemDialog> {
   final _wordController = TextEditingController();
   XFile? _pickedImage;
   Uint8List? _imageBytes;
+  final ImagePicker _picker = ImagePicker();
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      Uint8List? bytes;
-      if (kIsWeb) {
-        bytes = await pickedFile.readAsBytes();
-      }
-
-      setState(() {
-        _pickedImage = pickedFile;
-        _imageBytes = bytes;
-      });
+  Future<void> _processPickedImage(XFile pickedFile) async {
+    Uint8List? bytes;
+    if (kIsWeb) {
+      bytes = await pickedFile.readAsBytes();
     }
+
+    setState(() {
+      _pickedImage = pickedFile;
+      _imageBytes = bytes;
+    });
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      await _processPickedImage(pickedFile);
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      await _processPickedImage(pickedFile);
+    }
+  }
+
+  void _showSourceSelectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(AppStrings.selectImageSource),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text(AppStrings.gallery),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImageFromGallery();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text(AppStrings.camera),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImageFromCamera();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -54,7 +96,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
       if (kIsWeb) {
         imagePreviewWidget = Image.memory(
           _imageBytes!,
-          fit: BoxFit.fitHeight,
+          fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
@@ -65,7 +107,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
       } else {
         imagePreviewWidget = Image.file(
           File(_pickedImage!.path),
-          fit: BoxFit.fitHeight,
+          fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
@@ -81,7 +123,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
           children: [
             Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
             SizedBox(height: 8),
-            Text(AppStrings.pickImage),
+            Text(AppStrings.pickImageOrCapture),
           ],
         ),
       );
@@ -107,7 +149,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
               ),
               const SizedBox(height: 16),
               GestureDetector(
-                onTap: _pickImage,
+                onTap: () => _showSourceSelectionDialog(context),
                 child: Container(
                   height: 150,
                   width: double.infinity,

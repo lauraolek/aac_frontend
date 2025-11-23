@@ -32,6 +32,12 @@ class AppStrings {
   static const String addItemButton = 'Lisa ese';
   static String deleteItemConfirmation(String word) {return 'Kas tahad kustutada eseme "${word}"';}
 
+  // Image/Camera related strings
+  static const String selectImageSource = 'Vali pildi allikas';
+  static const String gallery = 'Galerii';
+  static const String camera = 'Kaamera';
+  static const String pickImageOrCapture = 'Vali pilt või tee foto';
+
   // Buttons
   static const String addButton = 'Lisa';
   static const String undoButton = 'Võta tagasi';

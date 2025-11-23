@@ -27,6 +27,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
   XFile? _pickedImage;
   Uint8List? _imageBytes; // for web image preview
   late String _currentImageUrl;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -35,22 +36,63 @@ class _EditItemDialogState extends State<EditItemDialog> {
     _currentImageUrl = widget.item.imageUrl;
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      Uint8List? bytes;
-      if (kIsWeb) {
-        bytes = await pickedFile.readAsBytes();
-      }
-
-      setState(() {
-        _pickedImage = pickedFile;
-        _imageBytes = bytes;
-        _currentImageUrl = '';
-      });
+  Future<void> _processPickedImage(XFile pickedFile) async {
+    Uint8List? bytes;
+    if (kIsWeb) {
+      bytes = await pickedFile.readAsBytes();
     }
+
+    setState(() {
+      _pickedImage = pickedFile;
+      _imageBytes = bytes;
+      _currentImageUrl = '';
+    });
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      await _processPickedImage(pickedFile);
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      await _processPickedImage(pickedFile);
+    }
+  }
+
+  void _showSourceSelectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(AppStrings.selectImageSource),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text(AppStrings.gallery),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImageFromGallery();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text(AppStrings.camera),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImageFromCamera();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -104,7 +146,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
           children: [
             Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
             SizedBox(height: 8),
-            Text(AppStrings.pickImage),
+            Text(AppStrings.pickImageOrCapture),
           ],
         ),
       );
@@ -137,7 +179,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
               ),
               const SizedBox(height: 16),
               GestureDetector(
-                onTap: _pickImage,
+                onTap: () => _showSourceSelectionDialog(context),
                 child: Container(
                   height: 150,
                   width: double.infinity,
