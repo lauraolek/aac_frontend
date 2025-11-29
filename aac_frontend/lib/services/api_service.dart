@@ -478,13 +478,13 @@ Future<List<Category>> fetchCategories(int profileId) async {
 
   Future<String> getAudio(List<CommunicationItem> words) async {
     print('ApiService: Requesting audio for words: $words');
-    final url = Uri.parse('${AppStrings.baseUrl}/text/audio');
+    final url = Uri.parse('${AppStrings.fastapiUrl}/tts/audio');
 
     try {
       final request = http.Request('POST', url);
       request.headers['Content-Type'] = 'application/json';
       request.headers['Authorization'] = 'Bearer $_authToken';
-      request.body = '{"sentence": ${jsonEncode(words.map((x) => x.displayedWord).toList())}}';
+      request.body = '{"sentence": ${jsonEncode(words.map((x) => x.displayedWord).join(" "))}}';
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -499,8 +499,8 @@ Future<List<Category>> fetchCategories(int profileId) async {
         throw Exception(errorBody['message'] ?? 'Failed to get audio');
       }
  
-      print('ApiService: Received audio URL.');
-      return response.body;
+      final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+      return jsonResponse['audioBase64'];
     } catch (e) {
       print('ApiService Exception during getAudio: $e');
       throw Exception('Network error or invalid response during getAudio: $e');
