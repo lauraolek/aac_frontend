@@ -57,12 +57,10 @@ class AppStrings {
   static const String registerTitle = 'Registreeri konto';
   static const String welcomeBack = 'Tere tulemast tagasi!';
   static const String createAccount = 'Loo konto';
-  static const String username = 'Kasutajanimi';
   static const String email = 'Email';
   static const String password = 'Salasõna';
   static const String loginButton = 'Logi sisse';
   static const String registerButton = 'Registreeri';
-  static const String pleaseEnterUsername = 'Palun sisesta kasutajanimi';
   static const String pleaseEnterValidEmail = 'Palun sisesta kehtiv email';
   static const String passwordTooShort = 'Salasõna peab olema vähemalt 12 sümbolit pikk.';
   static const String createAccountPrompt = 'Pole kontot? Registreeri';
@@ -72,7 +70,7 @@ class AppStrings {
   static const String registeredSuccessfully = 'Õnnestunud registreerimine! Palun logi sisse.';
   static const String loggedOutSuccessfully = 'Õnnestunud väljalogimine.';
 
-  static const String baseUrl = 'http://localhost:8080/api';
-  static const String fastapiUrl = 'http://127.0.0.1:8000/api/v1';
+  static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
+  static const String imageUrl = 'http://127.0.0.1:8000/api/v1/images/';
   static const String appTitle = 'AAC';
 }

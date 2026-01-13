@@ -12,14 +12,12 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLogin = true;
 
   @override
   void dispose() {
-    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -35,13 +33,12 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (_isLogin) {
-        await profileProvider.login(_usernameController.text, _passwordController.text);
+        await profileProvider.login(_emailController.text, _passwordController.text);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(AppStrings.loggedInSuccessfully)),
         );
       } else {
         await profileProvider.register(
-          _usernameController.text,
           _passwordController.text,
           _emailController.text,
         );
@@ -96,39 +93,23 @@ class _AuthScreenState extends State<AuthScreen> {
                         color: Colors.blue.shade700,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 15),
                     TextFormField(
-                      controller: _usernameController,
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        labelText: AppStrings.username,
+                        labelText: AppStrings.email,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        prefixIcon: const Icon(Icons.person),
+                        prefixIcon: const Icon(Icons.email),
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return AppStrings.pleaseEnterUsername;
+                        if (value == null || !value.contains('@')) {
+                          return AppStrings.pleaseEnterValidEmail;
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 15),
-                    if (!_isLogin)
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: AppStrings.email,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          prefixIcon: const Icon(Icons.email),
-                        ),
-                        validator: (value) {
-                          if (value == null || !value.contains('@')) {
-                            return AppStrings.pleaseEnterValidEmail;
-                          }
-                          return null;
-                        },
-                      ),
-                    if (!_isLogin) const SizedBox(height: 15),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,

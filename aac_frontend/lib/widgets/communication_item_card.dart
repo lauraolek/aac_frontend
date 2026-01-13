@@ -33,7 +33,7 @@ class CommunicationItemCard extends StatelessWidget {
                   top: Radius.circular(12),
                 ),
                 child: Image.network(
-                  AppStrings.baseUrl + item.imageUrl,
+                  AppStrings.imageUrl + item.imageUrl,
                   fit: BoxFit.fitHeight,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) {

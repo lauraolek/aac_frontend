@@ -130,7 +130,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
       }
     } else if (_currentImageUrl.isNotEmpty) {
       imagePreviewWidget = Image.network(
-        AppStrings.baseUrl + _currentImageUrl,
+        AppStrings.imageUrl + _currentImageUrl,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
           return Container(

@@ -131,7 +131,7 @@ class _EditCategoryDialogState extends State<EditCategoryDialog> {
       }
     } else if (_currentImageUrl.isNotEmpty) {
       imagePreviewWidget = Image.network(
-        AppStrings.baseUrl + _currentImageUrl,
+        AppStrings.imageUrl + _currentImageUrl,
         fit: BoxFit.fitHeight,
         errorBuilder: (context, error, stackTrace) {
           return Container(
