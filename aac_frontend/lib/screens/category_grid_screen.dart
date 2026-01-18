@@ -84,7 +84,7 @@ class CategoryGridScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profileProvider = Provider.of<ProfileProvider>(context);
-    final List<Category> categories = profileProvider.activeChild?.categories ?? [];
+    final List<Category> categories = profileProvider.activeProfile?.categories ?? [];
 
     return Scaffold(
       body: Padding(
@@ -145,7 +145,7 @@ class CategoryGridScreen extends StatelessWidget {
                     },
                   ),
       ),
-      floatingActionButton: profileProvider.activeChild != null && categories.isNotEmpty
+      floatingActionButton: profileProvider.activeProfile != null && categories.isNotEmpty
           ? FloatingActionButton(
               onPressed: () {
                 showDialog(

@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/child_profile.dart';
+import '../models/profile.dart';
 import '../services/api_service.dart';
 
 class ProfileProvider with ChangeNotifier {
   ApiService _apiService;
-  List<ChildProfile> _childProfiles = [];
-  ChildProfile? _activeChild;
+  List<Profile> _profiles = [];
+  Profile? _activeProfile;
   bool _isLoading = false;
   String? _authToken;
 
   bool get isLoading => _isLoading;
-  List<ChildProfile> get childProfiles => List.unmodifiable(_childProfiles);
-  ChildProfile? get activeChild => _activeChild;
+  List<Profile> get profiles => List.unmodifiable(_profiles);
+  Profile? get activeProfile => _activeProfile;
   bool get isAuthenticated => _authToken != null;
 
   ProfileProvider(this._apiService) {
@@ -32,7 +32,7 @@ class ProfileProvider with ChangeNotifier {
     _authToken = prefs.getString('jwt_token');
     if (_authToken != null) {
       _apiService.setAuthToken(_authToken!);
-      await _fetchChildProfiles();
+      await _fetchProfiles();
     } else {
       _isLoading = false;
       notifyListeners();
@@ -69,7 +69,7 @@ class ProfileProvider with ChangeNotifier {
     try {
       final response = await _apiService.loginUser(email, password);
       await _saveAuthToken(response['token']);
-      await _fetchChildProfiles();
+      await _fetchProfiles();
       _isLoading = false;
       notifyListeners();
       return true;
@@ -88,17 +88,17 @@ class ProfileProvider with ChangeNotifier {
     await prefs.clear();
     _authToken = null;
     _apiService.clearAuthToken();
-    _childProfiles = [];
-    _activeChild = null;
+    _profiles = [];
+    _activeProfile = null;
     _isLoading = false;
     notifyListeners();
   }
 
-  Future<void> _fetchChildProfiles() async {
+  Future<void> _fetchProfiles() async {
     if (!isAuthenticated) {
       print('ProfileProvider: Not logged in. Cannot fetch profiles.');
-      _childProfiles = [];
-      _activeChild = null;
+      _profiles = [];
+      _activeProfile = null;
       _isLoading = false;
       notifyListeners();
       return;
@@ -108,84 +108,84 @@ class ProfileProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      print('ProfileProvider: Fetching child profiles...');
-      _childProfiles = await _apiService.fetchChildProfiles();
-      print('ProfileProvider: Fetched ${_childProfiles.length} profiles.');
+      print('ProfileProvider: Fetching profiles...');
+      _profiles = await _apiService.fetchProfiles();
+      print('ProfileProvider: Fetched ${_profiles.length} profiles.');
 
-      if (_activeChild == null && _childProfiles.isNotEmpty) {
-        _activeChild = _childProfiles.first;
-        print('ProfileProvider: Set active child to ${_activeChild!.name}');
-      } else if (_activeChild != null && !_childProfiles.any((profile) => profile.id == _activeChild!.id)) {
-        _activeChild = _childProfiles.isNotEmpty ? _childProfiles.first : null;
-        print('ProfileProvider: Active child reset after deletion/not found.');
-      } else if (_activeChild != null) {
-        _activeChild = _childProfiles.firstWhere(
-          (profile) => profile.id == _activeChild!.id,
-          orElse: () => _activeChild!,
+      if (_activeProfile == null && _profiles.isNotEmpty) {
+        _activeProfile = _profiles.first;
+        print('ProfileProvider: Set active profile to ${_activeProfile!.name}');
+      } else if (_activeProfile != null && !_profiles.any((profile) => profile.id == _activeProfile!.id)) {
+        _activeProfile = _profiles.isNotEmpty ? _profiles.first : null;
+        print('ProfileProvider: Active profile reset after deletion/not found.');
+      } else if (_activeProfile != null) {
+        _activeProfile = _profiles.firstWhere(
+          (profile) => profile.id == _activeProfile!.id,
+          orElse: () => _activeProfile!,
         );
       }
     } catch (e) {
-      print('ProfileProvider Error: Failed to fetch child profiles: $e');
+      print('ProfileProvider Error: Failed to fetch profiles: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> addChild(ChildProfile profile) async {
+  Future<void> addProfile(Profile profile) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final newProfile = await _apiService.addChildProfile(profile);
-      _childProfiles.add(newProfile);
-      setActiveChild(newProfile);
-      await _fetchChildProfiles();
-      print('ProfileProvider: Child ${profile.name} added and state refreshed.');
+      final newProfile = await _apiService.addProfile(profile);
+      _profiles.add(newProfile);
+      setActiveProfile(newProfile);
+      await _fetchProfiles();
+      print('ProfileProvider: Profile ${profile.name} added and state refreshed.');
     } catch (e) {
-      print('ProfileProvider Error: Failed to add child: $e');
+      print('ProfileProvider Error: Failed to add profile: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> deleteChild(int childId) async {
+  Future<void> deleteProfile(int profileId) async {
     _isLoading = true;
     notifyListeners();
     try {
-      await _apiService.deleteChildProfile(childId);
-      await _fetchChildProfiles();
-      print('ProfileProvider: Child $childId deleted and state refreshed.');
+      await _apiService.deleteProfile(profileId);
+      await _fetchProfiles();
+      print('ProfileProvider: Profile $profileId deleted and state refreshed.');
     } catch (e) {
-      print('ProfileProvider Error: Failed to delete child: $e');
+      print('ProfileProvider Error: Failed to delete profile: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  void setActiveChild(ChildProfile? profile) {
-    if (_activeChild?.id != profile?.id) {
-      _activeChild = profile;
+  void setActiveProfile(Profile? profile) {
+    if (_activeProfile?.id != profile?.id) {
+      _activeProfile = profile;
       notifyListeners();
-      print('ProfileProvider: Active child set to ${profile?.name ?? 'null'}.');
+      print('ProfileProvider: Active profile set to ${profile?.name ?? 'null'}.');
     }
   }
 
-  // --- Category Management for Active Child (via API service) ---
+  // --- Category Management for Active Profile (via API service) ---
 
 Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
-    if (_activeChild == null) {
-      print('ProfileProvider: Not logged in or no active child to add category to.');
+    if (_activeProfile == null) {
+      print('ProfileProvider: Not logged in or no active profile to add category to.');
       return;
     }
 
     _isLoading = true;
     notifyListeners();
     try {
-      await _apiService.addCategory(_activeChild!.id!, categoryName, imageFile: pickedImage);
-      await _fetchChildProfiles();
-      print('ProfileProvider: Category $categoryName added for child ${_activeChild!.name} and state refreshed.');
+      await _apiService.addCategory(_activeProfile!.id!, categoryName, imageFile: pickedImage);
+      await _fetchProfiles();
+      print('ProfileProvider: Category $categoryName added for profile ${_activeProfile!.name} and state refreshed.');
     } catch (e) {
       print('ProfileProvider Error: Failed to add category: $e');
     } finally {
@@ -195,16 +195,16 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
   }
 
   Future<void> deleteCategory(int categoryId) async {
-    if (_activeChild == null) {
-      print('ProfileProvider: Not logged in or no active child to delete category from.');
+    if (_activeProfile == null) {
+      print('ProfileProvider: Not logged in or no active profile to delete category from.');
       return;
     }
     _isLoading = true;
     notifyListeners();
     try {
-      await _apiService.deleteCategory(_activeChild!.id!, categoryId);
-      await _fetchChildProfiles();
-      print('ProfileProvider: Category $categoryId deleted for child ${_activeChild!.name} and state refreshed.');
+      await _apiService.deleteCategory(_activeProfile!.id!, categoryId);
+      await _fetchProfiles();
+      print('ProfileProvider: Category $categoryId deleted for profile ${_activeProfile!.name} and state refreshed.');
     } catch (e) {
       print('ProfileProvider Error: Failed to delete category: $e');
     } finally {
@@ -214,22 +214,22 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
   }
 
   Future<void> editCategory(int categoryId, String newName, {XFile? newImageFile, String? currentImageUrl}) async {
-    if (_activeChild == null) {
-      print('ProfileProvider: Not logged in, or no active child to edit category for.');
+    if (_activeProfile == null) {
+      print('ProfileProvider: Not logged in, or no active profile to edit category for.');
       return;
     }
     _isLoading = true;
     notifyListeners();
     try {
       await _apiService.editCategory(
-        _activeChild!.id!,
+        _activeProfile!.id!,
         categoryId,
         newName,
         newImageFile: newImageFile,
         currentImageUrl: currentImageUrl,
       );
-      await _fetchChildProfiles();
-      print('ProfileProvider: Category $categoryId edited for child ${_activeChild!.name} and state refreshed.');
+      await _fetchProfiles();
+      print('ProfileProvider: Category $categoryId edited for profile ${_activeProfile!.name} and state refreshed.');
     } catch (e) {
       print('ProfileProvider Error: Failed to edit category: $e');
     } finally {
@@ -238,19 +238,19 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
     }
   }
 
-  // --- Item Management for Active Child's Categories (via API service) ---
+  // --- Item Management for Active Profile's Categories (via API service) ---
 
   Future<void> addItemToCategory(int categoryId, String word, {XFile? pickedImage}) async {
-    if (_activeChild == null) {
-      print('ProfileProvider: Not logged in or no active child to add item to.');
+    if (_activeProfile == null) {
+      print('ProfileProvider: Not logged in or no active profile to add item to.');
       return;
     }
 
     _isLoading = true;
     notifyListeners();
     try {
-      await _apiService.addItemToCategory(_activeChild!.id!, categoryId, word, imageFile: pickedImage);
-      await _fetchChildProfiles();
+      await _apiService.addItemToCategory(_activeProfile!.id!, categoryId, word, imageFile: pickedImage);
+      await _fetchProfiles();
       print('ProfileProvider: Item $word added to category $categoryId and state refreshed.');
     } catch (e) {
       print('ProfileProvider Error: Failed to add item: $e');
@@ -261,15 +261,15 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
   }
 
   Future<void> deleteItemFromCategory(int categoryId, int itemId) async {
-    if (_activeChild == null) {
-      print('ProfileProvider: Not logged in or no active child to delete item from.');
+    if (_activeProfile == null) {
+      print('ProfileProvider: Not logged in or no active profile to delete item from.');
       return;
     }
     _isLoading = true;
     notifyListeners();
     try {
-      await _apiService.deleteItemFromCategory(_activeChild!.id!, categoryId, itemId);
-      await _fetchChildProfiles();
+      await _apiService.deleteItemFromCategory(_activeProfile!.id!, categoryId, itemId);
+      await _fetchProfiles();
       print('ProfileProvider: Item $itemId deleted from category $categoryId and state refreshed.');
     } catch (e) {
       print('ProfileProvider Error: Failed to delete item: $e');
@@ -280,22 +280,22 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
   }
 
   Future<void> editItemInCategory(int categoryId, int itemId, String newWord, {XFile? newImageFile, String? currentImageUrl}) async {
-    if (_activeChild == null) {
-      print('ProfileProvider: Not logged in or no active child to edit item for.');
+    if (_activeProfile == null) {
+      print('ProfileProvider: Not logged in or no active profile to edit item for.');
       return;
     }
     _isLoading = true;
     notifyListeners();
     try {
       await _apiService.editItemInCategory(
-        _activeChild!.id!,
+        _activeProfile!.id!,
         categoryId,
         itemId,
         newWord,
         newImageFile: newImageFile,
         currentImageUrl: currentImageUrl,
       );
-      await _fetchChildProfiles();
+      await _fetchProfiles();
       print('ProfileProvider: Item $itemId edited in category $categoryId and state refreshed.');
     } catch (e) {
       print('ProfileProvider Error: Failed to edit item: $e');

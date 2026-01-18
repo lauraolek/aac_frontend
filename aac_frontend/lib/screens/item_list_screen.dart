@@ -96,9 +96,9 @@ class ItemListScreen extends StatelessWidget {
     );
     final profileProvider = Provider.of<ProfileProvider>(context);
 
-    final currentCategoryInProfile = profileProvider.activeChild?.categories.firstWhere(
+    final currentCategoryInProfile = profileProvider.activeProfile?.categories.firstWhere(
       (cat) => cat.id == category.id,
-      orElse: () => category, // fallback if category was deleted or child changed
+      orElse: () => category, // fallback if category was deleted or profile changed
     );
     final List<CommunicationItem> items = currentCategoryInProfile?.items ?? [];
 

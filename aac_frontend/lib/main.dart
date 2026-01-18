@@ -1,8 +1,8 @@
 import 'package:aac_app/constants/app_strings.dart';
-import 'package:aac_app/models/child_profile.dart';
+import 'package:aac_app/models/profile.dart';
 import 'package:aac_app/providers/profile_provider.dart';
 import 'package:aac_app/services/api_service.dart';
-import 'package:aac_app/widgets/add_child_dialog.dart';
+import 'package:aac_app/widgets/add_profile_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -141,8 +141,8 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(profileProvider.activeChild != null
-              ? '${_currentAppBarTitle} - ${profileProvider.activeChild!.name}'
+        title: Text(profileProvider.activeProfile != null
+              ? '${_currentAppBarTitle} - ${profileProvider.activeProfile!.name}'
               : _currentAppBarTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.blue.shade700,
@@ -184,7 +184,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        AppStrings.childProfiles,
+                        AppStrings.profiles,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
@@ -193,9 +193,9 @@ class _MainAppScreenState extends State<MainAppScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        provider.activeChild != null
-                            ? '${AppStrings.activeChild}: ${provider.activeChild!.name}'
-                            : AppStrings.noActiveChild,
+                        provider.activeProfile != null
+                            ? '${AppStrings.activeProfile}: ${provider.activeProfile!.name}'
+                            : AppStrings.noActiveProfile,
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
@@ -205,19 +205,19 @@ class _MainAppScreenState extends State<MainAppScreen> {
                     ],
                   ),
                 ),
-                ...provider.childProfiles.map((profile) {
+                ...provider.profiles.map((profile) {
                   return ListTile(
                     leading: Icon(
-                      profile.id == provider.activeChild?.id
+                      profile.id == provider.activeProfile?.id
                           ? Icons.person_pin
                           : Icons.person_outline,
-                      color: profile.id == provider.activeChild?.id
+                      color: profile.id == provider.activeProfile?.id
                           ? Colors.blue
                           : Colors.grey,
                     ),
                     title: Text(profile.name),
                     onTap: () {
-                      provider.setActiveChild(profile);
+                      provider.setActiveProfile(profile);
                       _navigateBackToCategories();
                       Navigator.pop(context);
                     },
@@ -227,8 +227,8 @@ class _MainAppScreenState extends State<MainAppScreen> {
                         showDialog(
                           context: context,
                           builder: (dialogContext) => AlertDialog(
-                            title: const Text(AppStrings.deleteChildProfile),
-                            content: Text(AppStrings.deleteChildConfirmation(profile.name)),
+                            title: const Text(AppStrings.deleteProfile),
+                            content: Text(AppStrings.deleteProfileConfirmation(profile.name)),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(dialogContext),
@@ -236,13 +236,13 @@ class _MainAppScreenState extends State<MainAppScreen> {
                               ),
                               ElevatedButton(
                                 onPressed: () async {
-                                  await provider.deleteChild(profile.id!);
+                                  await provider.deleteProfile(profile.id!);
                                   Navigator.pop(dialogContext);
 
-                                  if (provider.activeChild == null && provider.childProfiles.isNotEmpty) {
-                                    provider.setActiveChild(provider.childProfiles.first);
-                                  } else if (provider.childProfiles.isEmpty) {
-                                    provider.setActiveChild(null);
+                                  if (provider.activeProfile == null && provider.profiles.isNotEmpty) {
+                                    provider.setActiveProfile(provider.profiles.first);
+                                  } else if (provider.profiles.isEmpty) {
+                                    provider.setActiveProfile(null);
                                     _navigateBackToCategories();
                                   }
                                 },
@@ -259,15 +259,15 @@ class _MainAppScreenState extends State<MainAppScreen> {
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.add),
-                  title: const Text(AppStrings.addChildProfile),
+                  title: const Text(AppStrings.addProfile),
                   onTap: () {
                     Navigator.pop(context);
                     showDialog(
                       context: context,
-                      builder: (context) => AddChildDialog(
-                        onAddChild: (name) async {
-                          final newChild = ChildProfile(name: name, categories: []);
-                          await provider.addChild(newChild);
+                      builder: (context) => AddProfileDialog(
+                        onAddProfile: (name) async {
+                          final newProfile = Profile(name: name, categories: []);
+                          await provider.addProfile(newProfile);
                           _navigateBackToCategories();
                         },
                       ),

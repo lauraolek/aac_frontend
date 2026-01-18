@@ -7,7 +7,7 @@ import 'package:aac_app/models/conjugation_and_audio_result.dart';
 import 'package:aac_app/models/conjugation_sentence.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import '../models/child_profile.dart';
+import '../models/profile.dart';
 import '../models/category.dart';
 class ApiService {
   String? _authToken;
@@ -99,32 +99,32 @@ class ApiService {
     }
   }
 
-  // --- Child Profile Operations ---
+  // --- Profile Operations ---
 
-  Future<List<ChildProfile>> fetchChildProfiles() async {
-    print('ApiService: Fetching child profiles...');
+  Future<List<Profile>> fetchProfiles() async {
+    print('ApiService: Fetching profiles...');
     final url = Uri.parse('${AppStrings.baseUrl}/profiles/me');
     try {
       final response = await http.get(url, headers: _getHeaders());
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = json.decode(response.body);
-        return jsonList.map((json) => ChildProfile.fromMap(json)).toList();
+        return jsonList.map((json) => Profile.fromMap(json)).toList();
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized: Please log in again.');
       } else {
         final errorBody = json.decode(response.body);
-        print('ApiService Error: Fetching child profiles failed: ${response.statusCode} - ${errorBody['message']}');
-        throw Exception(errorBody['message'] ?? 'Failed to fetch child profiles');
+        print('ApiService Error: Fetching profiles failed: ${response.statusCode} - ${errorBody['message']}');
+        throw Exception(errorBody['message'] ?? 'Failed to fetch profiles');
       }
     } catch (e) {
-      print('ApiService Exception during fetchChildProfiles: $e');
-      throw Exception('Network error or invalid response during fetch child profiles: $e');
+      print('ApiService Exception during fetchProfiles: $e');
+      throw Exception('Network error or invalid response during fetch profiles: $e');
     }
   }
 
-  Future<ChildProfile> addChildProfile(ChildProfile profile) async {
-    print('ApiService: Adding child profile ${profile.name}...');
+  Future<Profile> addProfile(Profile profile) async {
+    print('ApiService: Adding profile ${profile.name}...');
     final url = Uri.parse('${AppStrings.baseUrl}/profiles/');
     try {
       final response = await http.post(
@@ -134,46 +134,46 @@ class ApiService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('ApiService: Child profile added successfully.');
-        return ChildProfile.fromMap(json.decode(response.body));
+        print('ApiService: Profile added successfully.');
+        return Profile.fromMap(json.decode(response.body));
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized: Please log in again.');
       } else {
         final errorBody = json.decode(response.body);
-        print('ApiService Error: Adding child profile failed: ${response.statusCode} - ${errorBody['message']}');
-        throw Exception(errorBody['message'] ?? 'Failed to add child profile');
+        print('ApiService Error: Adding profile failed: ${response.statusCode} - ${errorBody['message']}');
+        throw Exception(errorBody['message'] ?? 'Failed to add profile');
       }
     } catch (e) {
-      print('ApiService Exception during addChildProfile: $e');
-      throw Exception('Network error or invalid response during add child profile: $e');
+      print('ApiService Exception during addProfile: $e');
+      throw Exception('Network error or invalid response during add profile: $e');
     }
   }
 
-  Future<void> deleteChildProfile(int childId) async {
-    print('ApiService: Deleting child profile $childId...');
-    final url = Uri.parse('${AppStrings.baseUrl}/profiles/$childId');
+  Future<void> deleteProfile(int profileId) async {
+    print('ApiService: Deleting profile $profileId...');
+    final url = Uri.parse('${AppStrings.baseUrl}/profiles/$profileId');
     try {
       final response = await http.delete(url, headers: _getHeaders());
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        print('ApiService: Child profile deleted successfully.');
+        print('ApiService: Profile deleted successfully.');
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized: Please log in again.');
       } else {
         final errorBody = json.decode(response.body);
-        print('ApiService Error: Deleting child profile failed: ${response.statusCode} - ${errorBody['message']}');
-        throw Exception(errorBody['message'] ?? 'Failed to delete child profile');
+        print('ApiService Error: Deleting profile failed: ${response.statusCode} - ${errorBody['message']}');
+        throw Exception(errorBody['message'] ?? 'Failed to delete profile');
       }
     } catch (e) {
-      print('ApiService Exception during deleteChildProfile: $e');
-      throw Exception('Network error or invalid response during delete child profile: $e');
+      print('ApiService Exception during deleteProfile: $e');
+      throw Exception('Network error or invalid response during delete profile: $e');
     }
   }
 
   // --- Category Operations ---
 
 Future<List<Category>> fetchCategories(int profileId) async {
-    print('ApiService: Fetching child profiles for profile $profileId...');
+    print('ApiService: Fetching profiles for profile $profileId...');
     final url = Uri.parse('${AppStrings.baseUrl}/categories/profile/${profileId.toString()}');
     try {
       final response = await http.get(url, headers: _getHeaders());
@@ -194,10 +194,10 @@ Future<List<Category>> fetchCategories(int profileId) async {
     }
   }
 
-  Future<void> addCategory(int childId, String categoryName, {XFile? imageFile}) async {
-    print('ApiService: Adding category $categoryName to child $childId...');
+  Future<void> addCategory(int profileId, String categoryName, {XFile? imageFile}) async {
+    print('ApiService: Adding category $categoryName to profile $profileId...');
     print(_authToken);
-    final url = Uri.parse('${AppStrings.baseUrl}/categories/profile/$childId');
+    final url = Uri.parse('${AppStrings.baseUrl}/categories/profile/$profileId');
 
     final request = http.MultipartRequest('POST', url)
       ..headers.addAll({'Authorization': 'Bearer $_authToken'}) // multipart headers
@@ -236,8 +236,8 @@ Future<List<Category>> fetchCategories(int profileId) async {
     }
   }
 
-  Future<void> deleteCategory(int childId, int categoryId) async {
-    print('ApiService: Deleting category $categoryId from child $childId...');
+  Future<void> deleteCategory(int profileId, int categoryId) async {
+    print('ApiService: Deleting category $categoryId from profile $profileId...');
     final url = Uri.parse('${AppStrings.baseUrl}/categories/$categoryId');
     try {
       final response = await http.delete(url, headers: _getHeaders());
@@ -257,8 +257,8 @@ Future<List<Category>> fetchCategories(int profileId) async {
     }
   }
 
-  Future<void> editCategory(int childId, int categoryId, String newName, {XFile? newImageFile, String? currentImageUrl}) async {
-    print('ApiService: Editing category $categoryId for child $childId...');
+  Future<void> editCategory(int profileId, int categoryId, String newName, {XFile? newImageFile, String? currentImageUrl}) async {
+    print('ApiService: Editing category $categoryId for profile $profileId...');
     final url = Uri.parse('${AppStrings.baseUrl}/categories/$categoryId');
 
     final request = http.MultipartRequest('PUT', url)
@@ -298,8 +298,8 @@ Future<List<Category>> fetchCategories(int profileId) async {
 
   // --- Item Operations ---
 
-  Future<void> addItemToCategory(int childId, int categoryId, String word, {XFile? imageFile}) async {
-    print('ApiService: Adding item ${word} to category $categoryId for child $childId...');
+  Future<void> addItemToCategory(int profileId, int categoryId, String word, {XFile? imageFile}) async {
+    print('ApiService: Adding item ${word} to category $categoryId for profile $profileId...');
     final url = Uri.parse('${AppStrings.baseUrl}/imagewords/category/$categoryId');
 
     final request = http.MultipartRequest('POST', url);
@@ -339,8 +339,8 @@ Future<List<Category>> fetchCategories(int profileId) async {
     }
   }
 
-  Future<void> deleteItemFromCategory(int childId, int categoryId, int itemId) async {
-    print('ApiService: Deleting item $itemId from category $categoryId for child $childId...');
+  Future<void> deleteItemFromCategory(int profileId, int categoryId, int itemId) async {
+    print('ApiService: Deleting item $itemId from category $categoryId for profile $profileId...');
     final url = Uri.parse('${AppStrings.baseUrl}/imagewords/$itemId');
     try {
       final response = await http.delete(url, headers: _getHeaders());
@@ -360,8 +360,8 @@ Future<List<Category>> fetchCategories(int profileId) async {
     }
   }
 
-  Future<void> editItemInCategory(int childId, int categoryId, int itemId, String newWord, {XFile? newImageFile, String? currentImageUrl}) async {
-    print('ApiService: Editing item $itemId in category $categoryId for child $childId...');
+  Future<void> editItemInCategory(int profileId, int categoryId, int itemId, String newWord, {XFile? newImageFile, String? currentImageUrl}) async {
+    print('ApiService: Editing item $itemId in category $categoryId for profile $profileId...');
     final url = Uri.parse('${AppStrings.baseUrl}/imagewords/$itemId');
 
     final request = http.MultipartRequest('PUT', url)

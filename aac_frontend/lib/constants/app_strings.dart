@@ -1,14 +1,14 @@
 class AppStrings {
-  // Child Profile Management
-  static const String addChildProfile = 'Lisa lapse profiil';
-  static const String newChildName = 'Uue lapse nimi';
-  static const String enterChildName = 'Lisa lapse nimi';
-  static const String addChildButton = 'Lisa laps';
-  static const String deleteChildProfile = 'Kustuta lapse profiil';
-  static const String childProfiles = 'Laste profiilid';
-  static const String activeChild = 'Valitud laps';
-  static const String noActiveChild = 'Ühtki lapse profiili pole valitud';
-  static String deleteChildConfirmation(String name) => 'Kas tahad kindlasti lapse "${name}" profiili kustutada?';
+  // Profile Management
+  static const String addProfile = 'Lisa profiil';
+  static const String newProfileName = 'Uue profiili nimi';
+  static const String enterProfileName = 'Lisa nimi';
+  static const String addProfileButton = 'Lisa profiil';
+  static const String deleteProfile = 'Kustuta profiil';
+  static const String profiles = 'Profiilid';
+  static const String activeProfile = 'Valitud profiil';
+  static const String noActiveProfile = 'Ühtki profiili pole valitud';
+  static String deleteProfileConfirmation(String name) => 'Kas tahad kindlasti profiili "${name}" kustutada?';
 
   // Category Options
   static const String editCategory = 'Muuda kategooriat';

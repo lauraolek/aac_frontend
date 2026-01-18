@@ -1,11 +1,11 @@
 import 'category.dart';
 
-class ChildProfile {
+class Profile {
   final int? id;
   final String name;
   List<Category> categories;
 
-  ChildProfile({
+  Profile({
     this.id,
     required this.name,
     required this.categories,
@@ -19,8 +19,8 @@ class ChildProfile {
     };
   }
 
-  factory ChildProfile.fromMap(Map<String, dynamic> map) {
-    return ChildProfile(
+  factory Profile.fromMap(Map<String, dynamic> map) {
+    return Profile(
       id: map['id'] as int,
       name: map['name'] as String,
       categories:
@@ -31,12 +31,12 @@ class ChildProfile {
     );
   }
 
-  ChildProfile copyWith({
+  Profile copyWith({
     int? id,
     String? name,
     List<Category>? categories,
   }) {
-    return ChildProfile(
+    return Profile(
       id: id ?? this.id,
       name: name ?? this.name,
       categories: categories ?? this.categories,
@@ -45,7 +45,7 @@ class ChildProfile {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is ChildProfile && id == other.id;
+      identical(this, other) || other is Profile && id == other.id;
 
   @override
   int get hashCode => id.hashCode;
