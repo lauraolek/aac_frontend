@@ -5,6 +5,7 @@ import 'package:aac_app/services/api_service.dart';
 import 'package:aac_app/widgets/add_profile_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'models/category.dart';
 import 'providers/communication_provider.dart';
@@ -24,7 +25,8 @@ void main() {
               previousProfileProvider!..apiService = apiService,
         ),
         ChangeNotifierProxyProvider<ApiService, CommunicationProvider>(
-          create: (context) => CommunicationProvider(context.read<ApiService>()),
+          create: (context) =>
+              CommunicationProvider(context.read<ApiService>()),
           update: (context, apiService, previousCommunicationProvider) =>
               previousCommunicationProvider!..apiService = apiService,
         ),
@@ -62,9 +64,14 @@ class MyApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade600,
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         textButtonTheme: TextButtonThemeData(
@@ -113,15 +120,27 @@ class _MainAppScreenState extends State<MainAppScreen> {
   String _currentAppBarTitle = AppStrings.appTitle;
   bool _showBackButton = false;
 
+  Future<void> _launchURL() async {
+    final Uri url = Uri.parse('http://www.arasaac.org');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _currentBody = CategoryGridScreen(onNavigateToItems: _navigateToCategoryItems);
+    _currentBody = CategoryGridScreen(
+      onNavigateToItems: _navigateToCategoryItems,
+    );
   }
 
   void _navigateToCategoryItems(Category category) {
     setState(() {
-      _currentBody = ItemListScreen(category: category, onNavigateBack: _navigateBackToCategories);
+      _currentBody = ItemListScreen(
+        category: category,
+        onNavigateBack: _navigateBackToCategories,
+      );
       _currentAppBarTitle = category.name;
       _showBackButton = true;
     });
@@ -129,7 +148,9 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
   void _navigateBackToCategories() {
     setState(() {
-      _currentBody = CategoryGridScreen(onNavigateToItems: _navigateToCategoryItems);
+      _currentBody = CategoryGridScreen(
+        onNavigateToItems: _navigateToCategoryItems,
+      );
       _currentAppBarTitle = AppStrings.appTitle;
       _showBackButton = false;
     });
@@ -141,16 +162,17 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(profileProvider.activeProfile != null
+        title: Text(
+          profileProvider.activeProfile != null
               ? '${_currentAppBarTitle} - ${profileProvider.activeProfile!.name}'
-              : _currentAppBarTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+              : _currentAppBarTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         backgroundColor: Colors.blue.shade700,
         elevation: 4,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(16),
-          ),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
         leading: _showBackButton
             ? IconButton(
@@ -173,106 +195,172 @@ class _MainAppScreenState extends State<MainAppScreen> {
       drawer: Drawer(
         child: Consumer<ProfileProvider>(
           builder: (context, provider, child) {
-            return ListView(
-              padding: EdgeInsets.zero,
-              children: <Widget>[
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade700,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AppStrings.profiles,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: <Widget>[
+                      DrawerHeader(
+                        decoration: BoxDecoration(color: Colors.blue.shade700),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppStrings.profiles,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              provider.activeProfile != null
+                                  ? '${AppStrings.activeProfile}: ${provider.activeProfile!.name}'
+                                  : AppStrings.noActiveProfile,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        provider.activeProfile != null
-                            ? '${AppStrings.activeProfile}: ${provider.activeProfile!.name}'
-                            : AppStrings.noActiveProfile,
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
+                      ...provider.profiles.map((profile) {
+                        return ListTile(
+                          leading: Icon(
+                            profile.id == provider.activeProfile?.id
+                                ? Icons.person_pin
+                                : Icons.person_outline,
+                            color: profile.id == provider.activeProfile?.id
+                                ? Colors.blue
+                                : Colors.grey,
+                          ),
+                          title: Text(profile.name),
+                          onTap: () {
+                            provider.setActiveProfile(profile);
+                            _navigateBackToCategories();
+                            Navigator.pop(context);
+                          },
+                          trailing: IconButton(
+                            icon: const Icon(
+                              Icons.delete,
+                              color: Colors.redAccent,
+                            ),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  title: const Text(AppStrings.deleteProfile),
+                                  content: Text(
+                                    AppStrings.deleteProfileConfirmation(
+                                      profile.name,
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext),
+                                      child: const Text(
+                                        AppStrings.cancelButton,
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        await provider.deleteProfile(
+                                          profile.id!,
+                                        );
+                                        Navigator.pop(dialogContext);
+
+                                        if (provider.activeProfile == null &&
+                                            provider.profiles.isNotEmpty) {
+                                          provider.setActiveProfile(
+                                            provider.profiles.first,
+                                          );
+                                        } else if (provider.profiles.isEmpty) {
+                                          provider.setActiveProfile(null);
+                                          _navigateBackToCategories();
+                                        }
+                                      },
+                                      child: const Text(
+                                        AppStrings.deleteButton,
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      }).toList(),
+                      const Divider(),
+                      ListTile(
+                        leading: const Icon(Icons.add),
+                        title: const Text(AppStrings.addProfile),
+                        onTap: () {
+                          Navigator.pop(context);
+                          showDialog(
+                            context: context,
+                            builder: (context) => AddProfileDialog(
+                              onAddProfile: (name) async {
+                                final newProfile = Profile(
+                                  name: name,
+                                  categories: [],
+                                );
+                                await provider.addProfile(newProfile);
+                                _navigateBackToCategories();
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                // --- BRANDING & ATTRIBUTION FOOTER ---
+                const Divider(),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'images/logo_ARASAAC.png',
+                        height: 50,
+                        filterQuality: FilterQuality.medium,
+                        isAntiAlias: true,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.image_not_supported),
+                      ),
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: _launchURL, // Calls the method you just added
+                        child: RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            style: const TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'Inter'),
+                            children: [
+                              const TextSpan(text: "Piktogrammide autor: Sergio Palao. Päritolu: "),
+                              TextSpan(
+                                text: "ARASAAC (http://www.arasaac.org)",
+                                style: TextStyle(
+                                  color: Colors.blue.shade700,
+                                  decoration: TextDecoration.underline,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const TextSpan(text: ". Litsents: CC (BY-NC-SA). Omanik: Aragóni valitsus (Hispaania)."),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
                     ],
                   ),
-                ),
-                ...provider.profiles.map((profile) {
-                  return ListTile(
-                    leading: Icon(
-                      profile.id == provider.activeProfile?.id
-                          ? Icons.person_pin
-                          : Icons.person_outline,
-                      color: profile.id == provider.activeProfile?.id
-                          ? Colors.blue
-                          : Colors.grey,
-                    ),
-                    title: Text(profile.name),
-                    onTap: () {
-                      provider.setActiveProfile(profile);
-                      _navigateBackToCategories();
-                      Navigator.pop(context);
-                    },
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.redAccent),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (dialogContext) => AlertDialog(
-                            title: const Text(AppStrings.deleteProfile),
-                            content: Text(AppStrings.deleteProfileConfirmation(profile.name)),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(dialogContext),
-                                child: const Text(AppStrings.cancelButton),
-                              ),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  await provider.deleteProfile(profile.id!);
-                                  Navigator.pop(dialogContext);
-
-                                  if (provider.activeProfile == null && provider.profiles.isNotEmpty) {
-                                    provider.setActiveProfile(provider.profiles.first);
-                                  } else if (provider.profiles.isEmpty) {
-                                    provider.setActiveProfile(null);
-                                    _navigateBackToCategories();
-                                  }
-                                },
-                                child: const Text(AppStrings.deleteButton),
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                }).toList(),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.add),
-                  title: const Text(AppStrings.addProfile),
-                  onTap: () {
-                    Navigator.pop(context);
-                    showDialog(
-                      context: context,
-                      builder: (context) => AddProfileDialog(
-                        onAddProfile: (name) async {
-                          final newProfile = Profile(name: name, categories: []);
-                          await provider.addProfile(newProfile);
-                          _navigateBackToCategories();
-                        },
-                      ),
-                    );
-                  },
                 ),
               ],
             );
