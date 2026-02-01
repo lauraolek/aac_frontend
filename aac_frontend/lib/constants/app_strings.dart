@@ -70,6 +70,28 @@ class AppStrings {
   static const String registeredSuccessfully = 'Õnnestunud registreerimine! Palun logi sisse.';
   static const String loggedOutSuccessfully = 'Õnnestunud väljalogimine.';
 
+  // Child Mode / PIN Dialog
+  static const String settings = 'Seaded';
+  static const String childMode = 'Lapserežiim';
+  static const String childModeDescription = 'Lukustab seaded ja muutmise';
+  static const String exitChildModeTitle = 'Välju lapserežiimist';
+  static const String enterPinPrompt = 'Sisesta PIN-kood:';
+  static const String pinHint = '****';
+  static const String wrongPinError = 'Vale PIN-kood. Proovi uuesti.';
+  static const String confirmButton = 'Kinnita';
+  static const String childModeActive = 'Lapserežiim on aktiivne';
+  static const String changePin = 'Muuda PIN-koodi';
+  static const String oldPinWrong = 'Vana PIN on vale';
+  static const String enterNewPin = 'Sisesta uus PIN-kood';
+  static const String pinMustBeFourDigits = 'PIN peab olema 4 numbrit';
+  static const String pinMismatch = 'PIN-koodid ei ühti. Proovi uuesti.';
+  static const String enterPinAgain = 'Sisesta PIN uuesti';
+  static const String confirmNewPin = 'Kinnita uus PIN-kood';
+  static const String setupPin = 'Seadista PIN-kood';
+  static const String forgotPin = 'Unustasin PIN-koodi';
+  static const String pinResetSent = 'Uus PIN on saadetud teie e-mailile.';
+  static const String pinResetFailed = 'E-maili saatmine ebaõnnestus. Proovi uuesti.';
+
   static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
   static const String imageUrl = 'http://127.0.0.1:8000/api/v1/images/';
   static const String appTitle = 'AAC';

@@ -20,8 +20,12 @@ class ItemListScreen extends StatelessWidget {
   });
 
   void _showItemOptions(BuildContext context, CommunicationItem item) {
-    final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
-    
+    final profileProvider = Provider.of<ProfileProvider>(
+      context,
+      listen: false,
+    );
+    if (profileProvider.isChildMode) return;
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -62,7 +66,9 @@ class ItemListScreen extends StatelessWidget {
                     context: context,
                     builder: (dialogContext) => AlertDialog(
                       title: const Text(AppStrings.deleteItem),
-                      content: Text(AppStrings.deleteItemConfirmation(item.word)),
+                      content: Text(
+                        AppStrings.deleteItemConfirmation(item.word),
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(dialogContext),
@@ -70,11 +76,16 @@ class ItemListScreen extends StatelessWidget {
                         ),
                         ElevatedButton(
                           onPressed: () async {
-                            await profileProvider.deleteItemFromCategory(category.id!, item.id!);
+                            await profileProvider.deleteItemFromCategory(
+                              category.id!,
+                              item.id!,
+                            );
                             Navigator.pop(dialogContext);
                           },
                           child: const Text(AppStrings.deleteButton),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                          ),
                         ),
                       ],
                     ),
@@ -95,13 +106,15 @@ class ItemListScreen extends StatelessWidget {
       listen: false,
     );
     final profileProvider = Provider.of<ProfileProvider>(context);
+    final bool isReadOnly = profileProvider.isChildMode;
 
-    final currentCategoryInProfile = profileProvider.activeProfile?.categories.firstWhere(
-      (cat) => cat.id == category.id,
-      orElse: () => category, // fallback if category was deleted or profile changed
-    );
+    final currentCategoryInProfile = profileProvider.activeProfile?.categories
+        .firstWhere(
+          (cat) => cat.id == category.id,
+          orElse: () =>
+              category, // fallback if category was deleted or profile changed
+        );
     final List<CommunicationItem> items = currentCategoryInProfile?.items ?? [];
-
 
     return PopScope(
       canPop: true,
@@ -111,53 +124,61 @@ class ItemListScreen extends StatelessWidget {
         }
       },
       child: Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(8),
-        child: LayoutBuilder(
-          // https://medium.com/@rk0936626/use-responsive-grid-in-flutter-that-adjust-itself-based-on-screen-size-65b91c049fb0
-          builder: (context, constraints) {
-            final int columns = (constraints.maxWidth / 150)
-                .floor()
-                .clamp(1, double.infinity)
-                .toInt();
+        body: Padding(
+          padding: const EdgeInsets.all(8),
+          child: LayoutBuilder(
+            // https://medium.com/@rk0936626/use-responsive-grid-in-flutter-that-adjust-itself-based-on-screen-size-65b91c049fb0
+            builder: (context, constraints) {
+              final int columns = (constraints.maxWidth / 150)
+                  .floor()
+                  .clamp(1, double.infinity)
+                  .toInt();
 
-            return GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                childAspectRatio: 0.8,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return CommunicationItemCard(
-                  item: item,
-                  onTap: () {
-                    communicationProvider.addItem(item);
-                  },
-                  onLongPress: () => _showItemOptions(context, item),
-                );
-              },
-            );
-          },
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) => AddItemDialog(
-                onAddItem: (word, imageFile) async {
-                  await profileProvider.addItemToCategory(category.id!, word, pickedImage: imageFile);
+              return GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  childAspectRatio: 0.8,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return CommunicationItemCard(
+                    item: item,
+                    onTap: () {
+                      communicationProvider.addItem(item);
+                    },
+                    onLongPress: isReadOnly
+                        ? () {}
+                        : () => _showItemOptions(context, item),
+                  );
                 },
-              ),
-            );
-          },
-          child: const Icon(Icons.add),
-          backgroundColor: Colors.green,
+              );
+            },
+          ),
         ),
-    ),
+        floatingActionButton: isReadOnly
+            ? null
+            : FloatingActionButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AddItemDialog(
+                      onAddItem: (word, imageFile) async {
+                        await profileProvider.addItemToCategory(
+                          category.id!,
+                          word,
+                          pickedImage: imageFile,
+                        );
+                      },
+                    ),
+                  );
+                },
+                child: const Icon(Icons.add),
+                backgroundColor: Colors.green,
+              ),
+      ),
     );
   }
 }

@@ -16,6 +16,12 @@ class ProfileProvider with ChangeNotifier {
   Profile? get activeProfile => _activeProfile;
   bool get isAuthenticated => _authToken != null;
 
+  bool _isChildMode = false;
+  bool get isChildMode => _isChildMode;
+
+  String? _parentPin;
+  bool get hasPin => _parentPin != null;
+
   ProfileProvider(this._apiService) {
     _loadAuthToken();
   }
@@ -47,7 +53,7 @@ class ProfileProvider with ChangeNotifier {
     notifyListeners();
   }
 
-    Future<bool> register(String password, String email) async {
+  Future<bool> register(String password, String email) async {
     _isLoading = true;
     notifyListeners();
     try {
@@ -71,6 +77,7 @@ class ProfileProvider with ChangeNotifier {
       await _saveAuthToken(response['token']);
       await _fetchProfiles();
       _isLoading = false;
+      syncPinFromBackend();
       notifyListeners();
       return true;
     } catch (e) {
@@ -115,9 +122,12 @@ class ProfileProvider with ChangeNotifier {
       if (_activeProfile == null && _profiles.isNotEmpty) {
         _activeProfile = _profiles.first;
         print('ProfileProvider: Set active profile to ${_activeProfile!.name}');
-      } else if (_activeProfile != null && !_profiles.any((profile) => profile.id == _activeProfile!.id)) {
+      } else if (_activeProfile != null &&
+          !_profiles.any((profile) => profile.id == _activeProfile!.id)) {
         _activeProfile = _profiles.isNotEmpty ? _profiles.first : null;
-        print('ProfileProvider: Active profile reset after deletion/not found.');
+        print(
+          'ProfileProvider: Active profile reset after deletion/not found.',
+        );
       } else if (_activeProfile != null) {
         _activeProfile = _profiles.firstWhere(
           (profile) => profile.id == _activeProfile!.id,
@@ -140,7 +150,9 @@ class ProfileProvider with ChangeNotifier {
       _profiles.add(newProfile);
       setActiveProfile(newProfile);
       await _fetchProfiles();
-      print('ProfileProvider: Profile ${profile.name} added and state refreshed.');
+      print(
+        'ProfileProvider: Profile ${profile.name} added and state refreshed.',
+      );
     } catch (e) {
       print('ProfileProvider Error: Failed to add profile: $e');
     } finally {
@@ -168,24 +180,34 @@ class ProfileProvider with ChangeNotifier {
     if (_activeProfile?.id != profile?.id) {
       _activeProfile = profile;
       notifyListeners();
-      print('ProfileProvider: Active profile set to ${profile?.name ?? 'null'}.');
+      print(
+        'ProfileProvider: Active profile set to ${profile?.name ?? 'null'}.',
+      );
     }
   }
 
   // --- Category Management for Active Profile (via API service) ---
 
-Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
+  Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
     if (_activeProfile == null) {
-      print('ProfileProvider: Not logged in or no active profile to add category to.');
+      print(
+        'ProfileProvider: Not logged in or no active profile to add category to.',
+      );
       return;
     }
 
     _isLoading = true;
     notifyListeners();
     try {
-      await _apiService.addCategory(_activeProfile!.id!, categoryName, imageFile: pickedImage);
+      await _apiService.addCategory(
+        _activeProfile!.id!,
+        categoryName,
+        imageFile: pickedImage,
+      );
       await _fetchProfiles();
-      print('ProfileProvider: Category $categoryName added for profile ${_activeProfile!.name} and state refreshed.');
+      print(
+        'ProfileProvider: Category $categoryName added for profile ${_activeProfile!.name} and state refreshed.',
+      );
     } catch (e) {
       print('ProfileProvider Error: Failed to add category: $e');
     } finally {
@@ -196,7 +218,9 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
 
   Future<void> deleteCategory(int categoryId) async {
     if (_activeProfile == null) {
-      print('ProfileProvider: Not logged in or no active profile to delete category from.');
+      print(
+        'ProfileProvider: Not logged in or no active profile to delete category from.',
+      );
       return;
     }
     _isLoading = true;
@@ -204,7 +228,9 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
     try {
       await _apiService.deleteCategory(_activeProfile!.id!, categoryId);
       await _fetchProfiles();
-      print('ProfileProvider: Category $categoryId deleted for profile ${_activeProfile!.name} and state refreshed.');
+      print(
+        'ProfileProvider: Category $categoryId deleted for profile ${_activeProfile!.name} and state refreshed.',
+      );
     } catch (e) {
       print('ProfileProvider Error: Failed to delete category: $e');
     } finally {
@@ -213,9 +239,16 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
     }
   }
 
-  Future<void> editCategory(int categoryId, String newName, {XFile? newImageFile, String? currentImageUrl}) async {
+  Future<void> editCategory(
+    int categoryId,
+    String newName, {
+    XFile? newImageFile,
+    String? currentImageUrl,
+  }) async {
     if (_activeProfile == null) {
-      print('ProfileProvider: Not logged in, or no active profile to edit category for.');
+      print(
+        'ProfileProvider: Not logged in, or no active profile to edit category for.',
+      );
       return;
     }
     _isLoading = true;
@@ -229,7 +262,9 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
         currentImageUrl: currentImageUrl,
       );
       await _fetchProfiles();
-      print('ProfileProvider: Category $categoryId edited for profile ${_activeProfile!.name} and state refreshed.');
+      print(
+        'ProfileProvider: Category $categoryId edited for profile ${_activeProfile!.name} and state refreshed.',
+      );
     } catch (e) {
       print('ProfileProvider Error: Failed to edit category: $e');
     } finally {
@@ -240,18 +275,31 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
 
   // --- Item Management for Active Profile's Categories (via API service) ---
 
-  Future<void> addItemToCategory(int categoryId, String word, {XFile? pickedImage}) async {
+  Future<void> addItemToCategory(
+    int categoryId,
+    String word, {
+    XFile? pickedImage,
+  }) async {
     if (_activeProfile == null) {
-      print('ProfileProvider: Not logged in or no active profile to add item to.');
+      print(
+        'ProfileProvider: Not logged in or no active profile to add item to.',
+      );
       return;
     }
 
     _isLoading = true;
     notifyListeners();
     try {
-      await _apiService.addItemToCategory(_activeProfile!.id!, categoryId, word, imageFile: pickedImage);
+      await _apiService.addItemToCategory(
+        _activeProfile!.id!,
+        categoryId,
+        word,
+        imageFile: pickedImage,
+      );
       await _fetchProfiles();
-      print('ProfileProvider: Item $word added to category $categoryId and state refreshed.');
+      print(
+        'ProfileProvider: Item $word added to category $categoryId and state refreshed.',
+      );
     } catch (e) {
       print('ProfileProvider Error: Failed to add item: $e');
     } finally {
@@ -262,15 +310,23 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
 
   Future<void> deleteItemFromCategory(int categoryId, int itemId) async {
     if (_activeProfile == null) {
-      print('ProfileProvider: Not logged in or no active profile to delete item from.');
+      print(
+        'ProfileProvider: Not logged in or no active profile to delete item from.',
+      );
       return;
     }
     _isLoading = true;
     notifyListeners();
     try {
-      await _apiService.deleteItemFromCategory(_activeProfile!.id!, categoryId, itemId);
+      await _apiService.deleteItemFromCategory(
+        _activeProfile!.id!,
+        categoryId,
+        itemId,
+      );
       await _fetchProfiles();
-      print('ProfileProvider: Item $itemId deleted from category $categoryId and state refreshed.');
+      print(
+        'ProfileProvider: Item $itemId deleted from category $categoryId and state refreshed.',
+      );
     } catch (e) {
       print('ProfileProvider Error: Failed to delete item: $e');
     } finally {
@@ -279,9 +335,17 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
     }
   }
 
-  Future<void> editItemInCategory(int categoryId, int itemId, String newWord, {XFile? newImageFile, String? currentImageUrl}) async {
+  Future<void> editItemInCategory(
+    int categoryId,
+    int itemId,
+    String newWord, {
+    XFile? newImageFile,
+    String? currentImageUrl,
+  }) async {
     if (_activeProfile == null) {
-      print('ProfileProvider: Not logged in or no active profile to edit item for.');
+      print(
+        'ProfileProvider: Not logged in or no active profile to edit item for.',
+      );
       return;
     }
     _isLoading = true;
@@ -296,12 +360,63 @@ Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
         currentImageUrl: currentImageUrl,
       );
       await _fetchProfiles();
-      print('ProfileProvider: Item $itemId edited in category $categoryId and state refreshed.');
+      print(
+        'ProfileProvider: Item $itemId edited in category $categoryId and state refreshed.',
+      );
     } catch (e) {
       print('ProfileProvider Error: Failed to edit item: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    _isChildMode = prefs.getBool('child_mode') ?? false;
+    notifyListeners();
+  }
+
+  Future<void> setChildMode(bool value) async {
+    _isChildMode = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('child_mode', value);
+    notifyListeners();
+  }
+
+  bool verifyPin(String input) {
+    return input == _parentPin;
+  }
+
+  Future<void> syncPinFromBackend() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final String? fetchedPin = await _apiService.getRemotePin();
+      _parentPin = fetchedPin;
+    } catch (e) {
+      debugPrint("PIN sync failed: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> requestNewPinEmail() async {
+    final success = await _apiService.sendResetPinEmail();
+    if (success) {
+      syncPinFromBackend();
+    }
+    return success;
+  }
+
+  Future<bool> updatePin(String newPin) async {
+    final success = await _apiService.updateRemotePin(newPin);
+    if (success) {
+      _parentPin = newPin;
+      notifyListeners();
+    }
+    return success;
   }
 }

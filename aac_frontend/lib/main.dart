@@ -1,8 +1,10 @@
 import 'package:aac_app/constants/app_strings.dart';
 import 'package:aac_app/models/profile.dart';
 import 'package:aac_app/providers/profile_provider.dart';
+import 'package:aac_app/screens/settings_screen.dart';
 import 'package:aac_app/services/api_service.dart';
 import 'package:aac_app/widgets/add_profile_dialog.dart';
+import 'package:aac_app/widgets/change_pin_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -116,7 +118,7 @@ class MainAppScreen extends StatefulWidget {
 }
 
 class _MainAppScreenState extends State<MainAppScreen> {
-  Widget? _currentBody;
+  Category? _selectedCategory;
   String _currentAppBarTitle = AppStrings.appTitle;
   bool _showBackButton = false;
 
@@ -130,17 +132,11 @@ class _MainAppScreenState extends State<MainAppScreen> {
   @override
   void initState() {
     super.initState();
-    _currentBody = CategoryGridScreen(
-      onNavigateToItems: _navigateToCategoryItems,
-    );
   }
 
   void _navigateToCategoryItems(Category category) {
     setState(() {
-      _currentBody = ItemListScreen(
-        category: category,
-        onNavigateBack: _navigateBackToCategories,
-      );
+      _selectedCategory = category;
       _currentAppBarTitle = category.name;
       _showBackButton = true;
     });
@@ -148,9 +144,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
   void _navigateBackToCategories() {
     setState(() {
-      _currentBody = CategoryGridScreen(
-        onNavigateToItems: _navigateToCategoryItems,
-      );
+      _selectedCategory = null;
       _currentAppBarTitle = AppStrings.appTitle;
       _showBackButton = false;
     });
@@ -159,6 +153,21 @@ class _MainAppScreenState extends State<MainAppScreen> {
   @override
   Widget build(BuildContext context) {
     final profileProvider = Provider.of<ProfileProvider>(context);
+
+    Widget body;
+    if (profileProvider.isLoading) {
+      body = const Center(child: CircularProgressIndicator());
+    } else if (_selectedCategory != null) {
+      body = ItemListScreen(
+        category: _selectedCategory!,
+        onNavigateBack: _navigateBackToCategories,
+      );
+    } else {
+      body = CategoryGridScreen(
+        onNavigateToItems: _navigateToCategoryItems,
+        isReadOnly: profileProvider.isChildMode,
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -181,15 +190,44 @@ class _MainAppScreenState extends State<MainAppScreen> {
               )
             : null,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await profileProvider.logout();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text(AppStrings.loggedOutSuccessfully)),
-              );
-            },
-          ),
+          if (profileProvider.isChildMode)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.lock_outline,
+                  color: Colors.orangeAccent,
+                ),
+                onPressed: () => _showExitDialog(context, profileProvider),
+              ),
+            ),
+          if (!profileProvider.isChildMode) ...[
+            IconButton(
+              icon: const Icon(Icons.settings),
+              tooltip: AppStrings.settings,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                await profileProvider.logout();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(AppStrings.loggedOutSuccessfully),
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
         ],
       ),
       drawer: Drawer(
@@ -243,81 +281,91 @@ class _MainAppScreenState extends State<MainAppScreen> {
                             _navigateBackToCategories();
                             Navigator.pop(context);
                           },
-                          trailing: IconButton(
-                            icon: const Icon(
-                              Icons.delete,
-                              color: Colors.redAccent,
-                            ),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (dialogContext) => AlertDialog(
-                                  title: const Text(AppStrings.deleteProfile),
-                                  content: Text(
-                                    AppStrings.deleteProfileConfirmation(
-                                      profile.name,
-                                    ),
+                          trailing: profileProvider.isChildMode
+                              ? null
+                              : IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.redAccent,
                                   ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(dialogContext),
-                                      child: const Text(
-                                        AppStrings.cancelButton,
-                                      ),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () async {
-                                        await provider.deleteProfile(
-                                          profile.id!,
-                                        );
-                                        Navigator.pop(dialogContext);
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (dialogContext) => AlertDialog(
+                                        title: const Text(
+                                          AppStrings.deleteProfile,
+                                        ),
+                                        content: Text(
+                                          AppStrings.deleteProfileConfirmation(
+                                            profile.name,
+                                          ),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(dialogContext),
+                                            child: const Text(
+                                              AppStrings.cancelButton,
+                                            ),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () async {
+                                              await provider.deleteProfile(
+                                                profile.id!,
+                                              );
+                                              Navigator.pop(dialogContext);
 
-                                        if (provider.activeProfile == null &&
-                                            provider.profiles.isNotEmpty) {
-                                          provider.setActiveProfile(
-                                            provider.profiles.first,
-                                          );
-                                        } else if (provider.profiles.isEmpty) {
-                                          provider.setActiveProfile(null);
-                                          _navigateBackToCategories();
-                                        }
-                                      },
-                                      child: const Text(
-                                        AppStrings.deleteButton,
+                                              if (provider.activeProfile ==
+                                                      null &&
+                                                  provider
+                                                      .profiles
+                                                      .isNotEmpty) {
+                                                provider.setActiveProfile(
+                                                  provider.profiles.first,
+                                                );
+                                              } else if (provider
+                                                  .profiles
+                                                  .isEmpty) {
+                                                provider.setActiveProfile(null);
+                                                _navigateBackToCategories();
+                                              }
+                                            },
+                                            child: const Text(
+                                              AppStrings.deleteButton,
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    ),
-                                  ],
+                                    );
+                                  },
                                 ),
-                              );
-                            },
-                          ),
                         );
                       }).toList(),
                       const Divider(),
-                      ListTile(
-                        leading: const Icon(Icons.add),
-                        title: const Text(AppStrings.addProfile),
-                        onTap: () {
-                          Navigator.pop(context);
-                          showDialog(
-                            context: context,
-                            builder: (context) => AddProfileDialog(
-                              onAddProfile: (name) async {
-                                final newProfile = Profile(
-                                  name: name,
-                                  categories: [],
-                                );
-                                await provider.addProfile(newProfile);
-                                _navigateBackToCategories();
-                              },
-                            ),
-                          );
-                        },
-                      ),
+                      if (!profileProvider.isChildMode)
+                        ListTile(
+                          leading: const Icon(Icons.add),
+                          title: const Text(AppStrings.addProfile),
+                          onTap: () {
+                            Navigator.pop(context);
+                            showDialog(
+                              context: context,
+                              builder: (context) => AddProfileDialog(
+                                onAddProfile: (name) async {
+                                  final newProfile = Profile(
+                                    name: name,
+                                    categories: [],
+                                  );
+                                  await provider.addProfile(newProfile);
+                                  _navigateBackToCategories();
+                                },
+                              ),
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -342,9 +390,16 @@ class _MainAppScreenState extends State<MainAppScreen> {
                         child: RichText(
                           textAlign: TextAlign.center,
                           text: TextSpan(
-                            style: const TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'Inter'),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                              fontFamily: 'Inter',
+                            ),
                             children: [
-                              const TextSpan(text: "Piktogrammide autor: Sergio Palao. Päritolu: "),
+                              const TextSpan(
+                                text:
+                                    "Piktogrammide autor: Sergio Palao. Päritolu: ",
+                              ),
                               TextSpan(
                                 text: "ARASAAC (http://www.arasaac.org)",
                                 style: TextStyle(
@@ -353,7 +408,10 @@ class _MainAppScreenState extends State<MainAppScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const TextSpan(text: ". Litsents: CC (BY-NC-SA). Omanik: Aragóni valitsus (Hispaania)."),
+                              const TextSpan(
+                                text:
+                                    ". Litsents: CC (BY-NC-SA). Omanik: Aragóni valitsus (Hispaania).",
+                              ),
                             ],
                           ),
                         ),
@@ -367,16 +425,127 @@ class _MainAppScreenState extends State<MainAppScreen> {
           },
         ),
       ),
-      body: Consumer<ProfileProvider>(
-        builder: (context, profileProvider, child) {
-          if (profileProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          return _currentBody!;
-        },
-      ),
+      body: body,
       bottomNavigationBar: const SentenceBuilderBar(),
+    );
+  }
+
+  void _showExitDialog(BuildContext context, ProfileProvider provider) {
+    final pinController = TextEditingController(); // Always fresh/empty
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        String? errorMessage;
+        bool isSendingEmail = false;
+        bool emailSentSuccessfully = false;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            // 1. Success View: Shown after email is sent
+            if (emailSentSuccessfully) {
+              return AlertDialog(
+                title: const Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.green,
+                  size: 48,
+                ),
+                content: const Text(
+                  AppStrings.pinResetSent,
+                  textAlign: TextAlign.center,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(AppStrings.okButton),
+                  ),
+                ],
+              );
+            }
+            // 2. Default View: The PIN entry form
+            return AlertDialog(
+              title: const Text(AppStrings.exitChildModeTitle),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: pinController,
+                    keyboardType: TextInputType.number,
+                    obscureText: true,
+                    maxLength: 4,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: AppStrings.pinHint,
+                      errorText: errorMessage,
+                      counterText: "",
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Forgot PIN Link
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: isSendingEmail
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : TextButton(
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 30),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: () async {
+                              setDialogState(() => isSendingEmail = true);
+                              final success = await provider
+                                  .requestNewPinEmail();
+
+                              if (success) {
+                                setDialogState(
+                                  () => emailSentSuccessfully = true,
+                                );
+                              } else {
+                                setDialogState(() {
+                                  isSendingEmail = false;
+                                  errorMessage = AppStrings.pinResetFailed;
+                                });
+                              }
+                            },
+                            child: const Text(
+                              AppStrings.forgotPin,
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(AppStrings.cancelButton),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (provider.verifyPin(pinController.text)) {
+                      provider.setChildMode(false);
+                      Navigator.pop(context);
+                    } else {
+                      setDialogState(() {
+                        errorMessage = AppStrings.wrongPinError;
+                        pinController.clear();
+                      });
+                    }
+                  },
+                  child: const Text(AppStrings.confirmButton),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
