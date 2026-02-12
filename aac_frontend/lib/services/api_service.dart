@@ -661,4 +661,17 @@ class ApiService {
     );
     return response.statusCode == 200;
   }
+
+  Future<void> requestPasswordReset(String email) async {
+    final response = await http.post(
+      Uri.parse('${AppStrings.baseUrl}/users/forgot-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode != 200) {
+      final errorData = jsonDecode(response.body);
+      throw errorData['message'] ?? 'Parooli lähtestamise palve ebaõnnestus.';
+    }
+  }
 }

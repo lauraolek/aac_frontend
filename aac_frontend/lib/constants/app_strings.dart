@@ -45,6 +45,8 @@ class AppStrings {
   static const String speakButton = 'Räägi';
   static const String cancelButton = 'Loobu';
   static const String deleteButton = 'Kustuta';
+  static const String confirmButton = 'Kinnita';
+  static const String okButton = 'OK';
 
   // Dialogs
   static const String clearAllItemsDialogTitle = 'Kustuta kõik?';
@@ -69,6 +71,10 @@ class AppStrings {
   static const String loggedInSuccessfully = 'Õnnestunud sisselogimine!';
   static const String registeredSuccessfully = 'Õnnestunud registreerimine! Palun logi sisse.';
   static const String loggedOutSuccessfully = 'Õnnestunud väljalogimine.';
+  static const String forgotPassword = 'Unustasid parooli?';  
+  static const String passwordResetTitle = 'Kiri saadetud';
+  static const String passwordResetContent = 'Kui selle e-mailiga konto on olemas, saadame sulle parooli lähtestamise lingi.';
+  static const String passwordResetError = 'Parooli lähtestamise palve ebaõnnestus.';
 
   // Child Mode / PIN Dialog
   static const String settings = 'Seaded';
@@ -78,7 +84,6 @@ class AppStrings {
   static const String enterPinPrompt = 'Sisesta PIN-kood:';
   static const String pinHint = '****';
   static const String wrongPinError = 'Vale PIN-kood. Proovi uuesti.';
-  static const String confirmButton = 'Kinnita';
   static const String childModeActive = 'Lapserežiim on aktiivne';
   static const String changePin = 'Muuda PIN-koodi';
   static const String oldPinWrong = 'Vana PIN on vale';

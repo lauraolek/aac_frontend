@@ -23,17 +23,123 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
+  Future<void> _handleForgotPassword() async {
+    final currentEmail = _emailController.text.trim();
+    
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final TextEditingController resetController = TextEditingController(text: currentEmail);
+        bool isDialogLoading = false;
+        String? dialogErrorText;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text(AppStrings.forgotPassword),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(AppStrings.passwordResetContent),
+                  const SizedBox(height: 15),
+                  TextField(
+                    controller: resetController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: AppStrings.email,
+                      errorText: dialogErrorText,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.email),
+                    ),
+                    onChanged: (_) {
+                      if (dialogErrorText != null) {
+                        setDialogState(() => dialogErrorText = null);
+                      }
+                    },
+                  ),
+                  if (isDialogLoading)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 15),
+                      child: LinearProgressIndicator(),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(AppStrings.cancelButton),
+                ),
+                ElevatedButton(
+                  onPressed: isDialogLoading 
+                    ? null 
+                    : () async {
+                        final email = resetController.text.trim();
+                        
+                        if (email.isEmpty || !email.contains('@')) {
+                          setDialogState(() => dialogErrorText = AppStrings.pleaseEnterValidEmail);
+                          return;
+                        }
+
+                        setDialogState(() => isDialogLoading = true);
+                        
+                        try {
+                          await Provider.of<ProfileProvider>(context, listen: false)
+                              .sendPasswordResetEmail(email);
+                          
+                          if (context.mounted) {
+                            Navigator.pop(context); // Close reset input dialog
+                            _showSuccessDialog();    // Call the helper below
+                          }
+                        } catch (e) {
+                          setDialogState(() {
+                            isDialogLoading = false;
+                            dialogErrorText = e.toString();
+                          });
+                        }
+                      },
+                  child: const Text(AppStrings.confirmButton),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text(AppStrings.passwordResetTitle),
+        content: const Text(AppStrings.passwordResetContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text(AppStrings.okButton),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _submitAuthForm() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
     _formKey.currentState!.save();
 
-    final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
+    final profileProvider = Provider.of<ProfileProvider>(
+      context,
+      listen: false,
+    );
 
     try {
       if (_isLogin) {
-        await profileProvider.login(_emailController.text, _passwordController.text);
+        await profileProvider.login(
+          _emailController.text,
+          _passwordController.text,
+        );
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(AppStrings.loggedInSuccessfully)),
         );
@@ -62,14 +168,14 @@ class _AuthScreenState extends State<AuthScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isLogin ? AppStrings.loginTitle : AppStrings.registerTitle),
+        title: Text(
+          _isLogin ? AppStrings.loginTitle : AppStrings.registerTitle,
+        ),
         centerTitle: true,
         backgroundColor: Colors.blue.shade700,
         elevation: 4,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(16),
-          ),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
       ),
       body: Center(
@@ -77,7 +183,9 @@ class _AuthScreenState extends State<AuthScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Card(
             elevation: 8,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Form(
@@ -86,7 +194,9 @@ class _AuthScreenState extends State<AuthScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _isLogin ? AppStrings.welcomeBack : AppStrings.createAccount,
+                      _isLogin
+                          ? AppStrings.welcomeBack
+                          : AppStrings.createAccount,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -99,7 +209,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         labelText: AppStrings.email,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         prefixIcon: const Icon(Icons.email),
                       ),
                       validator: (value) {
@@ -115,7 +227,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       obscureText: true,
                       decoration: InputDecoration(
                         labelText: AppStrings.password,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         prefixIcon: const Icon(Icons.lock),
                       ),
                       validator: (value) {
@@ -125,6 +239,17 @@ class _AuthScreenState extends State<AuthScreen> {
                         return null;
                       },
                     ),
+                    if (_isLogin)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _handleForgotPassword, // Opens the new dialog
+                          child: const Text(
+                            AppStrings.forgotPassword,
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 25),
                     profileProvider.isLoading
                         ? const CircularProgressIndicator()
@@ -133,11 +258,23 @@ class _AuthScreenState extends State<AuthScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue.shade600,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 40,
+                                vertical: 15,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            child: Text(_isLogin ? AppStrings.loginButton : AppStrings.registerButton),
+                            child: Text(
+                              _isLogin
+                                  ? AppStrings.loginButton
+                                  : AppStrings.registerButton,
+                            ),
                           ),
                     const SizedBox(height: 15),
                     TextButton(
@@ -147,7 +284,9 @@ class _AuthScreenState extends State<AuthScreen> {
                         });
                       },
                       child: Text(
-                        _isLogin ? AppStrings.createAccountPrompt : AppStrings.alreadyHaveAccountPrompt,
+                        _isLogin
+                            ? AppStrings.createAccountPrompt
+                            : AppStrings.alreadyHaveAccountPrompt,
                         style: TextStyle(color: Colors.blue.shade700),
                       ),
                     ),

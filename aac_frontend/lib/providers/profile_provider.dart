@@ -419,4 +419,15 @@ class ProfileProvider with ChangeNotifier {
     }
     return success;
   }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _apiService.requestPasswordReset(email); 
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }
