@@ -30,7 +30,7 @@ class CategoryCard extends StatelessWidget {
                   top: Radius.circular(16),
                 ),
                 child: Image.network(
-                  AppStrings.imageUrl + category.imageUrl,
+                  category.imageUrl,
                   fit: BoxFit.fitHeight,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) {
