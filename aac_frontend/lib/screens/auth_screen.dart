@@ -140,6 +140,7 @@ class _AuthScreenState extends State<AuthScreen> {
           _emailController.text,
           _passwordController.text,
         );
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(AppStrings.loggedInSuccessfully)),
         );
@@ -148,6 +149,7 @@ class _AuthScreenState extends State<AuthScreen> {
           _passwordController.text,
           _emailController.text,
         );
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(AppStrings.registeredSuccessfully)),
         );
@@ -156,6 +158,7 @@ class _AuthScreenState extends State<AuthScreen> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${AppStrings.authError}: ${e.toString()}')),
       );
