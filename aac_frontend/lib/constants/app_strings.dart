@@ -1,3 +1,5 @@
+import 'package:web/web.dart' as web;
+
 class AppStrings {
   // Profile Management
   static const String addProfile = 'Lisa profiil';
@@ -97,7 +99,10 @@ class AppStrings {
   static const String pinResetSent = 'Uus PIN on saadetud teie e-mailile.';
   static const String pinResetFailed = 'E-maili saatmine ebaõnnestus. Proovi uuesti.';
 
-  static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
-  static const String imageUrl = 'http://127.0.0.1:8000/api/v1/images/';
+  static String get baseUrl {
+    final String currentOrigin = web.window.location.origin; /* when running locally, just use your backend URL */
+
+    return "$currentOrigin/api/v1";
+  }
   static const String appTitle = 'AAC';
 }
