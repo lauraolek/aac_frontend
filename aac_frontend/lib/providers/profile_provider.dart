@@ -135,6 +135,9 @@ class ProfileProvider with ChangeNotifier {
         );
       }
     } catch (e) {
+      if (e.toString().contains('Unauthorized')) {
+        await logout();
+      }
       print('ProfileProvider Error: Failed to fetch profiles: $e');
     } finally {
       _isLoading = false;
