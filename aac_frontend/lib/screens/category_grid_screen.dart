@@ -148,7 +148,8 @@ class CategoryGridScreen extends StatelessWidget {
             : LayoutBuilder(
                 // https://medium.com/@rk0936626/use-responsive-grid-in-flutter-that-adjust-itself-based-on-screen-size-65b91c049fb0
                 builder: (context, constraints) {
-                  final int columns = (constraints.maxWidth / 200)
+                  final int categoryTargetWidth = 130;
+                  final int columns = (constraints.maxWidth / categoryTargetWidth)
                       .floor()
                       .clamp(1, double.infinity)
                       .toInt();

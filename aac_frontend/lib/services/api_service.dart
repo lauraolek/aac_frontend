@@ -583,8 +583,7 @@ class ApiService {
         throw Exception(errorBody['message'] ?? 'Failed to conjugate');
       }
       final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-      print("here");
-      print(jsonResponse);
+
       final List<CommunicationItem> conjugatedItems =
           (jsonResponse['sentence'] as List<dynamic>)
               .map(

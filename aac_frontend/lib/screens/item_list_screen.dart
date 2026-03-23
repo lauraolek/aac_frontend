@@ -129,7 +129,8 @@ class ItemListScreen extends StatelessWidget {
           child: LayoutBuilder(
             // https://medium.com/@rk0936626/use-responsive-grid-in-flutter-that-adjust-itself-based-on-screen-size-65b91c049fb0
             builder: (context, constraints) {
-              final int columns = (constraints.maxWidth / 150)
+              final int itemTargetWidth = 100;
+              final int columns = (constraints.maxWidth / itemTargetWidth)
                   .floor()
                   .clamp(1, double.infinity)
                   .toInt();
