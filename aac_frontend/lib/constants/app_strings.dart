@@ -117,7 +117,7 @@ class AppStrings {
   static const String pinResetFailed = 'E-maili saatmine ebaõnnestus. Proovi uuesti.';
 
   static String get baseUrl {
-    final String currentOrigin ="http://localhost:8000"; /* when running locally, just use your backend URL */
+    final String currentOrigin = web.window.location.origin; /* when running locally, just use your backend URL */
 
     return "$currentOrigin/api/v1";
   }
