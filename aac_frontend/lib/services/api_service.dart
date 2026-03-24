@@ -677,4 +677,20 @@ class ApiService {
       throw errorData['message'] ?? 'Parooli lähtestamise palve ebaõnnestus.';
     }
   }
+
+  Future<void> completePasswordReset(String token, String newPassword) async {
+    final response = await http.post(
+      Uri.parse('${AppStrings.baseUrl}/users/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'token': token,
+        'new_password': newPassword,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      final errorData = jsonDecode(response.body);
+      throw errorData['detail'] ?? 'Parooli muutmine ebaõnnestus.';
+    }
+  }
 }

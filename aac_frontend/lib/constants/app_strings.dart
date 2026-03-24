@@ -77,6 +77,17 @@ class AppStrings {
   static const String passwordResetTitle = 'Kiri saadetud';
   static const String passwordResetContent = 'Kui selle e-mailiga konto on olemas, saadame sulle parooli lähtestamise lingi.';
   static const String passwordResetError = 'Parooli lähtestamise palve ebaõnnestus.';
+  
+  // Reset Password Screen
+  static const String resetPasswordTitle = 'Uue parooli määramine';
+  static const String newPasswordLabel = 'Uus parool';
+  static const String confirmPasswordLabel = 'Kinnita uus parool';
+  static const String changePasswordButton = 'Muuda parool';
+  
+  // Validation Messages
+  static const String passwordsDoNotMatch = 'Paroolid ei kattu!';
+  static const String passwordEmptyError = 'Palun sisesta parool';
+  static const String passwordChangedSuccess = 'Parool edukalt muudetud!';
 
   // Child Mode / PIN Dialog
   static const String settings = 'Seaded';
@@ -100,7 +111,7 @@ class AppStrings {
   static const String pinResetFailed = 'E-maili saatmine ebaõnnestus. Proovi uuesti.';
 
   static String get baseUrl {
-    final String currentOrigin = web.window.location.origin; /* when running locally, just use your backend URL */
+    final String currentOrigin ="http://localhost:8000"; /* when running locally, just use your backend URL */
 
     return "$currentOrigin/api/v1";
   }
