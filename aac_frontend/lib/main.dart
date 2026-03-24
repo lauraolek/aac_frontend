@@ -15,6 +15,7 @@ import 'screens/category_grid_screen.dart';
 import 'screens/item_list_screen.dart';
 import 'widgets/sentence_builder_bar.dart';
 import 'screens/auth_screen.dart';
+import 'screens/reset_password_screen.dart';
 
 void main() {
   runApp(
@@ -98,12 +99,27 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
+      // Use onGenerateRoute to handle deep links like /reset?token=...
+      onGenerateRoute: (settings) {
+        if (settings.name != null && settings.name!.startsWith('/reset')) {
+          final uri = Uri.parse(settings.name!);
+          final token = uri.queryParameters['token'];
+
+          if (token != null) {
+            return MaterialPageRoute(
+              builder: (context) => ResetPasswordScreen(token: token),
+              settings: settings,
+            );
+          }
+        }
+        return null; // Let 'home' handle normal navigation
+      },
       home: Consumer<ProfileProvider>(
         builder: (context, profileProvider, child) {
           if (!profileProvider.isAuthenticated) {
             return AuthScreen();
           }
-          return MainAppScreen();
+          return const MainAppScreen();
         },
       ),
     );
@@ -127,11 +143,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       throw Exception('Could not launch $url');
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
   }
 
   void _navigateToCategoryItems(Category category) {
@@ -244,9 +255,9 @@ class _MainAppScreenState extends State<MainAppScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               AppStrings.profiles,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -318,23 +329,21 @@ class _MainAppScreenState extends State<MainAppScreen> {
                                               if (provider.activeProfile ==
                                                       null &&
                                                   provider
-                                                      .profiles
-                                                      .isNotEmpty) {
+                                                      .profiles.isNotEmpty) {
                                                 provider.setActiveProfile(
                                                   provider.profiles.first,
                                                 );
                                               } else if (provider
-                                                  .profiles
-                                                  .isEmpty) {
+                                                  .profiles.isEmpty) {
                                                 provider.setActiveProfile(null);
                                                 _navigateBackToCategories();
                                               }
                                             },
-                                            child: const Text(
-                                              AppStrings.deleteButton,
-                                            ),
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor: Colors.red,
+                                            ),
+                                            child: const Text(
+                                              AppStrings.deleteButton,
                                             ),
                                           ),
                                         ],
@@ -386,7 +395,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
                       ),
                       const SizedBox(height: 12),
                       GestureDetector(
-                        onTap: _launchURL, // Calls the method you just added
+                        onTap: _launchURL,
                         child: RichText(
                           textAlign: TextAlign.center,
                           text: TextSpan(
@@ -431,7 +440,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
   }
 
   void _showExitDialog(BuildContext context, ProfileProvider provider) {
-    final pinController = TextEditingController(); // Always fresh/empty
+    final pinController = TextEditingController();
 
     showDialog(
       context: context,
@@ -500,8 +509,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
                             ),
                             onPressed: () async {
                               setDialogState(() => isSendingEmail = true);
-                              final success = await provider
-                                  .requestNewPinEmail();
+                              final success = await provider.requestNewPinEmail();
 
                               if (success) {
                                 setDialogState(

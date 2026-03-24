@@ -678,6 +678,18 @@ class ApiService {
     }
   }
 
+  Future<void> validateResetToken(String token) async {
+    final response = await http.get(
+      Uri.parse('${AppStrings.baseUrl}/users/reset-password/validate?token=$token'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode != 200) {
+      final Map<String, dynamic> errorData = json.decode(response.body);
+      throw Exception(errorData['detail'] ?? 'Invalid or expired token');
+    }
+  }
+
   Future<void> completePasswordReset(String token, String newPassword) async {
     final response = await http.post(
       Uri.parse('${AppStrings.baseUrl}/users/reset-password'),

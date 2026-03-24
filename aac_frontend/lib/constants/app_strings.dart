@@ -53,6 +53,8 @@ class AppStrings {
   // Dialogs
   static const String clearAllItemsDialogTitle = 'Kustuta kõik?';
   static const String clearAllItemsDialogContent = 'Kas oled kindel, et tahad kõik kustutada?';
+  static const String successTitle = 'Õnnestus';
+  static const String errorTitle = 'Viga';
 
   // User Login/Auth
   static const String loggedInAs = 'Sisselogitud kui';
@@ -88,6 +90,10 @@ class AppStrings {
   static const String passwordsDoNotMatch = 'Paroolid ei kattu!';
   static const String passwordEmptyError = 'Palun sisesta parool';
   static const String passwordChangedSuccess = 'Parool edukalt muudetud!';
+  static const String checkingToken = 'Kontrollin parooli taastamise linki...';
+  static const String tokenExpiredTitle = 'Link on aegunud';
+  static const String tokenExpiredMessage = 
+      'See parooli taastamise link ei ole enam kehtiv. Palun telli uus link.';
 
   // Child Mode / PIN Dialog
   static const String settings = 'Seaded';
