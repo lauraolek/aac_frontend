@@ -145,6 +145,24 @@ class ProfileProvider with ChangeNotifier {
     }
   }
 
+  Future<void> refreshProfilesSilently() async {
+    try {
+      // Only fetch new data, don't trigger the full-screen loading state
+      _profiles = await _apiService.fetchProfiles();
+      
+      // Update the active profile references so the UI gets the new URLs
+      if (_activeProfile != null) {
+        _activeProfile = _profiles.firstWhere(
+          (p) => p.id == _activeProfile!.id,
+          orElse: () => _profiles.first,
+        );
+      }
+      notifyListeners(); // This triggers the UI to re-render with new URLs
+    } catch (e) {
+      debugPrint("Silent refresh failed: $e");
+    }
+  }
+
   Future<void> addProfile(Profile profile) async {
     _isLoading = true;
     notifyListeners();

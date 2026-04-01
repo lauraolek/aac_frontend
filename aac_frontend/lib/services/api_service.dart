@@ -109,10 +109,6 @@ class ApiService {
     try {
       final response = await http.get(url, headers: _getHeaders());
 
-      if (response.statusCode == 401) {
-        throw Exception('Unauthorized');
-      }
-
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = json.decode(response.body);
         return jsonList.map((json) => Profile.fromMap(json)).toList();

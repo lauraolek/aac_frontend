@@ -1,5 +1,7 @@
 import 'package:aac_app/constants/app_strings.dart';
+import 'package:aac_app/providers/profile_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/communication_item.dart';
 
 class CommunicationItemCard extends StatelessWidget {
@@ -37,6 +39,7 @@ class CommunicationItemCard extends StatelessWidget {
                   fit: BoxFit.fitHeight,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) {
+                    Provider.of<ProfileProvider>(context, listen: false).refreshProfilesSilently();
                     // Fallback for image loading errors
                     return Container(
                       color: Colors.grey[300],
