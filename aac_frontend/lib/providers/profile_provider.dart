@@ -22,6 +22,8 @@ class ProfileProvider with ChangeNotifier {
   String? _parentPin;
   bool get hasPin => _parentPin != null;
 
+  DateTime? _lastSilentRefresh;
+
   ProfileProvider(this._apiService) {
     _loadAuthToken();
   }
@@ -147,9 +149,16 @@ class ProfileProvider with ChangeNotifier {
 
   Future<void> refreshProfilesSilently() async {
     try {
+      if (_lastSilentRefresh != null &&
+          DateTime.now().difference(_lastSilentRefresh!).inSeconds < 10) {
+        return;
+      }
+
+      _lastSilentRefresh = DateTime.now();
+
       // Only fetch new data, don't trigger the full-screen loading state
       _profiles = await _apiService.fetchProfiles();
-      
+
       // Update the active profile references so the UI gets the new URLs
       if (_activeProfile != null) {
         _activeProfile = _profiles.firstWhere(
@@ -445,7 +454,7 @@ class ProfileProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      await _apiService.requestPasswordReset(email); 
+      await _apiService.requestPasswordReset(email);
     } finally {
       _isLoading = false;
       notifyListeners();
