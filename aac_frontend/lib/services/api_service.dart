@@ -1,10 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:aac_app/constants/app_strings.dart';
 import 'package:aac_app/models/communication_item.dart';
 import 'package:aac_app/models/conjugation_and_audio_result.dart';
-import 'package:aac_app/models/conjugation_sentence.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../models/profile.dart';

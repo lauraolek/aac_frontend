@@ -4,7 +4,6 @@ import 'package:aac_app/providers/profile_provider.dart';
 import 'package:aac_app/screens/settings_screen.dart';
 import 'package:aac_app/services/api_service.dart';
 import 'package:aac_app/widgets/add_profile_dialog.dart';
-import 'package:aac_app/widgets/change_pin_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
