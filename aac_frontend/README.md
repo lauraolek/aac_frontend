@@ -1,16 +1,13 @@
 # aac_app
 
-A new Flutter project.
+A specialized AAC (Augmentative and Alternative Communication) tool built with Flutter, focused on the Estonian language.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Update app_strings.dart with the correct backend URL.
 
-A few resources to get you started if this is your first Flutter project:
+    flutter pub get
+    flutter run -d chrome # Veebis arendamiseks
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Notes
+Contact me for a link to a test environment
