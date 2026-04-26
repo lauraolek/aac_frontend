@@ -356,7 +356,8 @@ class ApiService {
   Future<void> addItemToCategory(
     int profileId,
     int categoryId,
-    String word, {
+    String word,
+    String? wordOsastav, {
     XFile? imageFile,
   }) async {
     print(
@@ -369,6 +370,11 @@ class ApiService {
     final request = http.MultipartRequest('POST', url);
     request.headers.addAll({'Authorization': 'Bearer $_authToken'});
     request.fields['word'] = word;
+
+    print('DEBUG: wordOsastav value is: "$wordOsastav"');
+    if (wordOsastav != null) {
+      request.fields['wordOsastav'] = wordOsastav;
+    }
 
     if (imageFile != null) {
       request.files.add(
@@ -441,7 +447,8 @@ class ApiService {
     int profileId,
     int categoryId,
     int itemId,
-    String newWord, {
+    String newWord,
+    String? newWordOsastav, {
     XFile? newImageFile,
     String? currentImageUrl,
   }) async {
@@ -454,6 +461,10 @@ class ApiService {
       ..headers.addAll(_getHeaders(includeAuth: true))
       ..fields['wordText'] = newWord
       ..fields['categoryId'] = categoryId.toString();
+
+    if (newWordOsastav != null) {
+      request.fields['wordOsastav'] = newWordOsastav;
+    }
 
     if (newImageFile != null) {
       request.files.add(
@@ -548,50 +559,28 @@ class ApiService {
     }
   }
 
-  Future<List<CommunicationItem>> getConjugate(
-    List<CommunicationItem> words,
-  ) async {
-    print('ApiService: Requesting conjugation for words: $words');
-    final url = Uri.parse('${AppStrings.baseUrl}/estnltk/convert');
+  Future<List<String>> getPartitiveSuggestions(String word) async {
+    if (word.isEmpty) return [];
 
     try {
-      final request = http.Request('POST', url);
-      request.headers['Content-Type'] = 'application/json';
-      request.headers['Authorization'] = 'Bearer $_authToken';
-      request.body =
-          '{"sentence": ${jsonEncode(words.map((x) => x.toMap()).toList())}}';
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        print('ApiService: Conjugation done successfully.');
-      } else if (response.statusCode == 401) {
-        throw Exception('Unauthorized: Please log in again.');
-      } else {
-        final errorBody = json.decode(response.body);
-        print(
-          'ApiService Error: Conjugation failed: ${response.statusCode} - ${errorBody['message']}',
-        );
-        throw Exception(errorBody['message'] ?? 'Failed to conjugate');
-      }
-      final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-
-      final List<CommunicationItem> conjugatedItems =
-          (jsonResponse['sentence'] as List<dynamic>)
-              .map(
-                (jsonItem) =>
-                    CommunicationItem.fromMap(jsonItem as Map<String, dynamic>),
-              )
-              .toList();
-
-      print('ApiService: Received conjugated text.');
-      return conjugatedItems;
-    } catch (e) {
-      print('ApiService Exception during getConjugate: $e');
-      throw Exception(
-        'Network error or invalid response during getConjugate: $e',
+      final response = await http.get(
+        Uri.parse('${AppStrings.baseUrl}/estnltk/partitive?word=$word'),
+        headers: {
+          'Authorization': 'Bearer $_authToken',
+          'Content-Type': 'application/json',
+        },
       );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((e) => e.toString()).toList();
+      } else {
+        print('EstNTLK API Error: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('ApiService Error fetching partitiveSuggestions: $e');
+      return [];
     }
   }
 
@@ -673,7 +662,9 @@ class ApiService {
 
   Future<void> validateResetToken(String token) async {
     final response = await http.get(
-      Uri.parse('${AppStrings.baseUrl}/users/reset-password/validate?token=$token'),
+      Uri.parse(
+        '${AppStrings.baseUrl}/users/reset-password/validate?token=$token',
+      ),
       headers: {'Content-Type': 'application/json'},
     );
 
@@ -687,10 +678,7 @@ class ApiService {
     final response = await http.post(
       Uri.parse('${AppStrings.baseUrl}/users/reset-password'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'token': token,
-        'new_password': newPassword,
-      }),
+      body: jsonEncode({'token': token, 'new_password': newPassword}),
     );
 
     if (response.statusCode != 200) {

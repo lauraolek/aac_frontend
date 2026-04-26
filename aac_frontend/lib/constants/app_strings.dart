@@ -26,6 +26,7 @@ class AppStrings {
 
   // Item Options
   static const String itemWord = 'Ese';
+  static const String itemWordHint = 'nt: kook, sööma';
   static const String editItem = 'Muuda eset';
   static const String deleteItem = 'Kustuta ese';
   static const String addItem = 'Lisa ese';
@@ -33,6 +34,11 @@ class AppStrings {
   static const String enterItemWord = 'Sisesta eseme nimi';
   static const String addItemButton = 'Lisa ese';
   static String deleteItemConfirmation(String word) {return 'Kas tahad kustutada eseme "${word}"';}
+
+  // Grammar
+  static const String grammarFormLabel = "Sõna osastav kääne või da-vorm";
+  static const String grammarFormHelper = "Ma tahan... (nt: kooki, süüa)";
+  static const String grammarSuggestionTitle = "Vali soovitatud vorm:";
 
   // Image/Camera related strings
   static const String selectImageSource = 'Vali pildi allikas';

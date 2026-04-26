@@ -1,17 +1,21 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:aac_app/services/api_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_strings.dart';
 
-typedef AddItemCallback = void Function(String word, XFile? imageFile);
+typedef AddItemCallback = void Function(String word, String? wordOsastav, XFile? imageFile);
 
 class AddItemDialog extends StatefulWidget {
   final AddItemCallback onAddItem;
+  final ApiService apiService;
 
   const AddItemDialog({
     super.key,
     required this.onAddItem,
+    required this.apiService,
   });
 
   @override
@@ -21,9 +25,35 @@ class AddItemDialog extends StatefulWidget {
 class _AddItemDialogState extends State<AddItemDialog> {
   final _formKey = GlobalKey<FormState>();
   final _wordController = TextEditingController();
+  final _osastavController = TextEditingController();
+  List<String> _suggestions = [];
+  Timer? _debounce;
+
   XFile? _pickedImage;
   Uint8List? _imageBytes;
   final ImagePicker _picker = ImagePicker();
+
+void _onWordChanged(String val) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    
+    _debounce = Timer(const Duration(milliseconds: 600), () async {
+      if (val.length < 2) {
+        setState(() => _suggestions = []);
+        return;
+      }
+
+      final results = await widget.apiService.getPartitiveSuggestions(val);
+      
+      if (mounted) {
+        setState(() {
+          _suggestions = results;
+          if (_suggestions.isNotEmpty) {
+            _osastavController.text = _suggestions.first;
+          }
+        });
+      }
+    });
+  }
 
   Future<void> _processPickedImage(XFile pickedFile) async {
     Uint8List? bytes;
@@ -86,6 +116,8 @@ class _AddItemDialogState extends State<AddItemDialog> {
   @override
   void dispose() {
     _wordController.dispose();
+    _osastavController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -139,7 +171,8 @@ class _AddItemDialogState extends State<AddItemDialog> {
             children: [
               TextFormField(
                 controller: _wordController,
-                decoration: const InputDecoration(labelText: AppStrings.itemWord),
+                decoration: const InputDecoration(labelText: AppStrings.itemWord, hintText: AppStrings.itemWordHint), //TODO
+                onChanged: _onWordChanged,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return AppStrings.enterItemWord;
@@ -148,6 +181,37 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 },
               ),
               const SizedBox(height: 16),
+
+              // 2. SUGGESTIONS CHIPS
+              if (_suggestions.isNotEmpty) ...[
+                const Text(AppStrings.grammarSuggestionTitle, style: TextStyle(fontSize: 12, color: Colors.grey)),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 8.0,
+                  children: _suggestions.map((sug) => ChoiceChip(
+                    label: Text(sug),
+                    selected: _osastavController.text == sug,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() => _osastavController.text = sug);
+                      }
+                    },
+                  )).toList(),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // 3. PARTITIVE OVERRIDE (Osastav)
+              TextFormField(
+                controller: _osastavController,
+                decoration: const InputDecoration(
+                  labelText: AppStrings.grammarFormLabel,
+                  helperText: AppStrings.grammarFormHelper,
+                ),
+                validator: null,
+              ),
+              const SizedBox(height: 16),
+
               GestureDetector(
                 onTap: () => _showSourceSelectionDialog(context),
                 child: Container(
@@ -186,7 +250,10 @@ class _AddItemDialogState extends State<AddItemDialog> {
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              widget.onAddItem(_wordController.text, _pickedImage);
+              String? osastavValue = _osastavController.text.trim();
+              if (osastavValue.isEmpty) osastavValue = null;
+              
+              widget.onAddItem(_wordController.text, osastavValue, _pickedImage);
               Navigator.of(context).pop();
             }
           },

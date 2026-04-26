@@ -28,6 +28,7 @@ class ProfileProvider with ChangeNotifier {
     _loadAuthToken();
   }
 
+  ApiService get apiService => _apiService;
   set apiService(ApiService apiService) {
     _apiService = apiService;
     notifyListeners();
@@ -307,7 +308,8 @@ class ProfileProvider with ChangeNotifier {
 
   Future<void> addItemToCategory(
     int categoryId,
-    String word, {
+    String word, 
+    String? wordOsastav, {
     XFile? pickedImage,
   }) async {
     if (_activeProfile == null) {
@@ -324,6 +326,7 @@ class ProfileProvider with ChangeNotifier {
         _activeProfile!.id!,
         categoryId,
         word,
+        wordOsastav,
         imageFile: pickedImage,
       );
       await _fetchProfiles();
@@ -368,7 +371,8 @@ class ProfileProvider with ChangeNotifier {
   Future<void> editItemInCategory(
     int categoryId,
     int itemId,
-    String newWord, {
+    String newWord,
+    String? newWordOsastav, {
     XFile? newImageFile,
     String? currentImageUrl,
   }) async {
@@ -386,6 +390,7 @@ class ProfileProvider with ChangeNotifier {
         categoryId,
         itemId,
         newWord,
+        newWordOsastav,
         newImageFile: newImageFile,
         currentImageUrl: currentImageUrl,
       );

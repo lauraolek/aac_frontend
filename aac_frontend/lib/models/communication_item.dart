@@ -2,6 +2,7 @@ class CommunicationItem {
   final int? id;
   final String imageUrl;
   String word;
+  String? wordOsastav;
   int? sequence;
   String? conjugatedWord;
   String? displayedWord;
@@ -10,6 +11,7 @@ class CommunicationItem {
     this.id,
     required this.imageUrl,
     required this.word,
+    this.wordOsastav,
     this.sequence,
     this.conjugatedWord,
     this.displayedWord
@@ -20,6 +22,7 @@ class CommunicationItem {
       'id': id,
       'imageUrl': imageUrl,
       'word': word,
+      'wordOsastav': wordOsastav
     };
   }
 
@@ -28,6 +31,7 @@ class CommunicationItem {
       id: map['id'] as int,
       imageUrl: map['imageUrl'] as String,
       word: map['word'] as String,
+      wordOsastav: map['wordOsastav'] as String?,
       conjugatedWord: map['conjugatedWord'] as String?,
       displayedWord: map['displayedWord'] as String?
     );
@@ -37,6 +41,7 @@ class CommunicationItem {
     int? id,
     String? imageUrl,
     String? word,
+    String? wordOsastav,
     int? sequence,
     String? conjugatedWord,
     String? displayedWord
@@ -45,6 +50,7 @@ class CommunicationItem {
       id: id ?? this.id,
       imageUrl: imageUrl ?? this.imageUrl,
       word: word ?? this.word,
+      wordOsastav: wordOsastav ?? this.wordOsastav,
       sequence: sequence ?? this.sequence,
       conjugatedWord: conjugatedWord ?? this.conjugatedWord,
       displayedWord: displayedWord ?? this.displayedWord
