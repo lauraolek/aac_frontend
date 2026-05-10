@@ -124,15 +124,17 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _submitAuthForm() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    _formKey.currentState!.save();
-
     final profileProvider = Provider.of<ProfileProvider>(
       context,
       listen: false,
     );
+
+    if (profileProvider.isLoading) return;
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    _formKey.currentState!.save();
 
     try {
       if (_isLogin) {
@@ -210,6 +212,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
                       decoration: InputDecoration(
                         labelText: AppStrings.email,
                         border: OutlineInputBorder(
@@ -228,6 +231,8 @@ class _AuthScreenState extends State<AuthScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _submitAuthForm(),
                       decoration: InputDecoration(
                         labelText: AppStrings.password,
                         border: OutlineInputBorder(
