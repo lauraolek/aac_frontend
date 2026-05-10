@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_strings.dart';
 
-typedef AddItemCallback = void Function(String word, String? wordOsastav, XFile? imageFile);
+typedef AddItemCallback =
+    void Function(String word, String? wordOsastav, XFile? imageFile);
 
 class AddItemDialog extends StatefulWidget {
   final AddItemCallback onAddItem;
@@ -26,6 +27,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
   final _formKey = GlobalKey<FormState>();
   final _wordController = TextEditingController();
   final _osastavController = TextEditingController();
+  bool _showImageError = false;
   List<String> _suggestions = [];
   Timer? _debounce;
 
@@ -33,9 +35,9 @@ class _AddItemDialogState extends State<AddItemDialog> {
   Uint8List? _imageBytes;
   final ImagePicker _picker = ImagePicker();
 
-void _onWordChanged(String val) {
+  void _onWordChanged(String val) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    
+
     _debounce = Timer(const Duration(milliseconds: 600), () async {
       if (val.length < 2) {
         setState(() => _suggestions = []);
@@ -43,7 +45,7 @@ void _onWordChanged(String val) {
       }
 
       final results = await widget.apiService.getPartitiveSuggestions(val);
-      
+
       if (mounted) {
         setState(() {
           _suggestions = results;
@@ -64,6 +66,7 @@ void _onWordChanged(String val) {
     setState(() {
       _pickedImage = pickedFile;
       _imageBytes = bytes;
+      _showImageError = false;
     });
   }
 
@@ -132,7 +135,11 @@ void _onWordChanged(String val) {
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
-              child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+              child: const Icon(
+                Icons.broken_image,
+                size: 50,
+                color: Colors.grey,
+              ),
             );
           },
         );
@@ -143,7 +150,11 @@ void _onWordChanged(String val) {
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
-              child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+              child: const Icon(
+                Icons.broken_image,
+                size: 50,
+                color: Colors.grey,
+              ),
             );
           },
         );
@@ -171,7 +182,10 @@ void _onWordChanged(String val) {
             children: [
               TextFormField(
                 controller: _wordController,
-                decoration: const InputDecoration(labelText: AppStrings.itemWord, hintText: AppStrings.itemWordHint), //TODO
+                decoration: const InputDecoration(
+                  labelText: AppStrings.itemWord,
+                  hintText: AppStrings.itemWordHint,
+                ),
                 onChanged: _onWordChanged,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -184,19 +198,26 @@ void _onWordChanged(String val) {
 
               // 2. SUGGESTIONS CHIPS
               if (_suggestions.isNotEmpty) ...[
-                const Text(AppStrings.grammarSuggestionTitle, style: TextStyle(fontSize: 12, color: Colors.grey)),
+                const Text(
+                  AppStrings.grammarSuggestionTitle,
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 8.0,
-                  children: _suggestions.map((sug) => ChoiceChip(
-                    label: Text(sug),
-                    selected: _osastavController.text == sug,
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() => _osastavController.text = sug);
-                      }
-                    },
-                  )).toList(),
+                  children: _suggestions
+                      .map(
+                        (sug) => ChoiceChip(
+                          label: Text(sug),
+                          selected: _osastavController.text == sug,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() => _osastavController.text = sug);
+                            }
+                          },
+                        ),
+                      )
+                      .toList(),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -212,22 +233,43 @@ void _onWordChanged(String val) {
               ),
               const SizedBox(height: 16),
 
-              GestureDetector(
-                onTap: () => _showSourceSelectionDialog(context),
-                child: Container(
-                  height: 150,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: imagePreviewWidget,
+              // Material + InkWell implementation for accessibility with keyboard
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    setState(() => _showImageError = false);
+                    _showSourceSelectionDialog(context);
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Ink(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _showImageError
+                            ? Colors.red.shade900
+                            : Colors.grey,
+                        width: _showImageError ? 2 : 1,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: imagePreviewWidget,
+                    ),
                   ),
                 ),
               ),
+              if (_showImageError)
+                Padding(
+                  padding: EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    AppStrings.imageRequired,
+                    style: TextStyle(color: Colors.red.shade900, fontSize: 14),
+                  ),
+                ),
               if (_pickedImage != null)
                 TextButton(
                   onPressed: () {
@@ -249,11 +291,22 @@ void _onWordChanged(String val) {
         ),
         ElevatedButton(
           onPressed: () {
-            if (_formKey.currentState!.validate()) {
+            final isFormValid = _formKey.currentState!.validate();
+            final hasImage = _pickedImage != null;
+
+            if (!hasImage) {
+              setState(() => _showImageError = true);
+            }
+
+            if (isFormValid && hasImage) {
               String? osastavValue = _osastavController.text.trim();
               if (osastavValue.isEmpty) osastavValue = null;
-              
-              widget.onAddItem(_wordController.text, osastavValue, _pickedImage);
+
+              widget.onAddItem(
+                _wordController.text,
+                osastavValue,
+                _pickedImage,
+              );
               Navigator.of(context).pop();
             }
           },

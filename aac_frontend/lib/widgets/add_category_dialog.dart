@@ -9,10 +9,7 @@ typedef AddCategoryCallback = void Function(String name, XFile? imageFile);
 class AddCategoryDialog extends StatefulWidget {
   final AddCategoryCallback onAddCategory;
 
-  const AddCategoryDialog({
-    super.key,
-    required this.onAddCategory,
-  });
+  const AddCategoryDialog({super.key, required this.onAddCategory});
 
   @override
   _AddCategoryDialogState createState() => _AddCategoryDialogState();
@@ -21,6 +18,7 @@ class AddCategoryDialog extends StatefulWidget {
 class _AddCategoryDialogState extends State<AddCategoryDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  bool _showImageError = false;
   XFile? _pickedImage; // XFile to be platform-agnostic
   Uint8List? _imageBytes; // for web image preview
   final ImagePicker _picker = ImagePicker();
@@ -34,6 +32,7 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
     setState(() {
       _pickedImage = pickedFile;
       _imageBytes = bytes;
+      _showImageError = false;
     });
   }
 
@@ -104,7 +103,11 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
-              child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+              child: const Icon(
+                Icons.broken_image,
+                size: 50,
+                color: Colors.grey,
+              ),
             );
           },
         );
@@ -132,7 +135,9 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: AppStrings.categoryName),
+                decoration: const InputDecoration(
+                  labelText: AppStrings.categoryName,
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return AppStrings.enterCategoryName;
@@ -141,22 +146,50 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () => _showSourceSelectionDialog(context),
-                child: Container(
-                  height: 150,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: imagePreviewWidget,
+
+              // Material + InkWell implementation for accessibility with keyboard
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    setState(() => _showImageError = false);
+                    _showSourceSelectionDialog(context);
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Ink(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _showImageError
+                            ? Colors.red.shade900
+                            : Colors.grey,
+                        width: _showImageError ? 2 : 1,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: imagePreviewWidget,
+                    ),
                   ),
                 ),
               ),
+
+              if (_showImageError)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    AppStrings.imageRequired,
+                    style: TextStyle(
+                      color: Colors.red.shade900,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+
               if (_pickedImage != null)
                 TextButton(
                   onPressed: () {
@@ -178,7 +211,14 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
         ),
         ElevatedButton(
           onPressed: () {
-            if (_formKey.currentState!.validate()) {
+            final isFormValid = _formKey.currentState!.validate();
+            final hasImage = _pickedImage != null;
+
+            if (!hasImage) {
+              setState(() => _showImageError = true);
+            }
+
+            if (isFormValid && hasImage) {
               widget.onAddCategory(_nameController.text, _pickedImage);
               Navigator.of(context).pop();
             }

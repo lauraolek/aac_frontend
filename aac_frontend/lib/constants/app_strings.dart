@@ -23,6 +23,7 @@ class AppStrings {
   // Image options
   static const String pickImage = 'Kliki pildi valimiseks';
   static const String removeImage = 'Eemalda pilt';
+  static const String imageRequired =  'Palun lisa pilt';
 
   // Item Options
   static const String itemWord = 'Ese';
