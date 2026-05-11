@@ -71,14 +71,24 @@ class _AddItemDialogState extends State<AddItemDialog> {
   }
 
   Future<void> _pickImageFromGallery() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1080,
+      maxHeight: 1080,
+      imageQuality: 85,
+    );
     if (pickedFile != null) {
       await _processPickedImage(pickedFile);
     }
   }
 
   Future<void> _pickImageFromCamera() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1080,
+      maxHeight: 1080,
+      imageQuality: 85,
+    );
     if (pickedFile != null) {
       await _processPickedImage(pickedFile);
     }
