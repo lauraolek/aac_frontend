@@ -213,7 +213,8 @@ class ApiService {
 
   Future<void> addCategory(
     int profileId,
-    String categoryName, {
+    String categoryName,
+    int imageRotationTurns, {
     XFile? imageFile,
   }) async {
     print('ApiService: Adding category $categoryName to profile $profileId...');
@@ -227,6 +228,7 @@ class ApiService {
         'Authorization': 'Bearer $_authToken',
       }) // multipart headers
       ..fields['name'] = categoryName;
+      request.fields['rotationTurns'] = imageRotationTurns.toString();
 
     if (imageFile != null) {
       // fromBytes to handle both web and mobile files
@@ -297,7 +299,8 @@ class ApiService {
   Future<void> editCategory(
     int profileId,
     int categoryId,
-    String newName, {
+    String newName,
+    int imageRotationTurns, {
     XFile? newImageFile,
     String? currentImageUrl,
   }) async {
@@ -307,6 +310,7 @@ class ApiService {
     final request = http.MultipartRequest('PUT', url)
       ..headers.addAll({'Authorization': 'Bearer $_authToken'})
       ..fields['name'] = newName;
+      request.fields['rotationTurns'] = imageRotationTurns.toString();
 
     if (newImageFile != null) {
       request.files.add(
@@ -357,7 +361,8 @@ class ApiService {
     int profileId,
     int categoryId,
     String word,
-    String? wordOsastav, {
+    String? wordOsastav,
+    int rotationTurns, {
     XFile? imageFile,
   }) async {
     print(
@@ -375,6 +380,7 @@ class ApiService {
     if (wordOsastav != null) {
       request.fields['wordOsastav'] = wordOsastav;
     }
+    request.fields['rotationTurns'] = rotationTurns.toString();
 
     if (imageFile != null) {
       request.files.add(
@@ -448,7 +454,8 @@ class ApiService {
     int categoryId,
     int itemId,
     String newWord,
-    String? newWordOsastav, {
+    String? newWordOsastav,
+    int? imageRotationTurns, {
     XFile? newImageFile,
     String? currentImageUrl,
   }) async {
@@ -465,6 +472,7 @@ class ApiService {
     if (newWordOsastav != null) {
       request.fields['wordOsastav'] = newWordOsastav;
     }
+    request.fields['rotationTurns'] = imageRotationTurns.toString();
 
     if (newImageFile != null) {
       request.files.add(

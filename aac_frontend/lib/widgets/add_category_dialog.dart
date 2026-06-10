@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_strings.dart';
 
-typedef AddCategoryCallback = void Function(String name, XFile? imageFile);
+typedef AddCategoryCallback =
+    void Function(String name, int rotationTurns, XFile? imageFile);
 
 class AddCategoryDialog extends StatefulWidget {
   final AddCategoryCallback onAddCategory;
@@ -19,6 +20,7 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   bool _showImageError = false;
+  int _rotationTurns = 0;
   XFile? _pickedImage; // XFile to be platform-agnostic
   Uint8List? _imageBytes; // for web image preview
   final ImagePicker _picker = ImagePicker();
@@ -33,6 +35,7 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
       _pickedImage = pickedFile;
       _imageBytes = bytes;
       _showImageError = false;
+      _rotationTurns = 0;
     });
   }
 
@@ -102,12 +105,13 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
   Widget build(BuildContext context) {
     Widget imagePreviewWidget;
     if (_pickedImage != null) {
+      Widget visualImage;
       if (kIsWeb && _imageBytes != null) {
         // Image.memory for web
-        imagePreviewWidget = Image.memory(_imageBytes!, fit: BoxFit.cover);
+        visualImage = Image.memory(_imageBytes!, fit: BoxFit.cover);
       } else {
         // Image.file for non-web platforms
-        imagePreviewWidget = Image.file(
+        visualImage = Image.file(
           File(_pickedImage!.path),
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
@@ -122,6 +126,10 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
           },
         );
       }
+      imagePreviewWidget = RotatedBox(
+        quarterTurns: _rotationTurns,
+        child: visualImage,
+      );
     } else {
       imagePreviewWidget = const Center(
         child: Column(
@@ -201,14 +209,29 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
                 ),
 
               if (_pickedImage != null)
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _pickedImage = null;
-                      _imageBytes = null;
-                    });
-                  },
-                  child: const Text(AppStrings.removeImage),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _rotationTurns = (_rotationTurns + 1) % 4;
+                        });
+                      },
+                      icon: const Icon(Icons.rotate_right),
+                      label: const Text(AppStrings.turnPhoto),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _pickedImage = null;
+                          _imageBytes = null;
+                          _rotationTurns = 0;
+                        });
+                      },
+                      child: const Text(AppStrings.removeImage),
+                    ),
+                  ],
                 ),
             ],
           ),
@@ -229,7 +252,11 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
             }
 
             if (isFormValid && hasImage) {
-              widget.onAddCategory(_nameController.text, _pickedImage);
+              widget.onAddCategory(
+                _nameController.text,
+                _rotationTurns,
+                _pickedImage,
+              );
               Navigator.of(context).pop();
             }
           },

@@ -8,7 +8,13 @@ import 'dart:io';
 import '../constants/app_strings.dart';
 import '../models/communication_item.dart';
 
-typedef EditItemCallback = void Function(String word, String? wordOsastav, XFile? imageFile);
+typedef EditItemCallback =
+    void Function(
+      String word,
+      String? wordOsastav,
+      XFile? imageFile,
+      int rotationTurns,
+    );
 
 class EditItemDialog extends StatefulWidget {
   final CommunicationItem item;
@@ -33,6 +39,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
   List<String> _suggestions = [];
   Timer? _debounce;
 
+  int _rotationTurns = 0;
   XFile? _pickedImage;
   Uint8List? _imageBytes; // for web image preview
   late String _currentImageUrl;
@@ -42,13 +49,16 @@ class _EditItemDialogState extends State<EditItemDialog> {
   void initState() {
     super.initState();
     _wordController = TextEditingController(text: widget.item.word);
-    _osastavController = TextEditingController(text: widget.item.wordOsastav ?? '');
+    _osastavController = TextEditingController(
+      text: widget.item.wordOsastav ?? '',
+    );
     _currentImageUrl = widget.item.imageUrl;
+    _rotationTurns = 0;
   }
 
   void _onWordChanged(String val) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    
+
     _debounce = Timer(const Duration(milliseconds: 600), () async {
       if (val.length < 2) {
         setState(() => _suggestions = []);
@@ -56,12 +66,14 @@ class _EditItemDialogState extends State<EditItemDialog> {
       }
 
       final results = await widget.apiService.getPartitiveSuggestions(val);
-      
+
       if (mounted) {
         setState(() {
           _suggestions = results;
           if (_suggestions.isNotEmpty) {
             _osastavController.text = _suggestions.first;
+          } else {
+            _osastavController.clear();
           }
         });
       }
@@ -78,6 +90,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
       _pickedImage = pickedFile;
       _imageBytes = bytes;
       _currentImageUrl = '';
+      _rotationTurns = 0;
     });
   }
 
@@ -149,39 +162,59 @@ class _EditItemDialogState extends State<EditItemDialog> {
   Widget build(BuildContext context) {
     Widget imagePreviewWidget;
     if (_pickedImage != null) {
+      Widget visualImage;
       if (kIsWeb) {
-        imagePreviewWidget = Image.memory(
+        visualImage = Image.memory(
           _imageBytes!,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
-              child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+              child: const Icon(
+                Icons.broken_image,
+                size: 50,
+                color: Colors.grey,
+              ),
             );
           },
         );
       } else {
-        imagePreviewWidget = Image.file(
+        visualImage = Image.file(
           File(_pickedImage!.path),
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
-              child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+              child: const Icon(
+                Icons.broken_image,
+                size: 50,
+                color: Colors.grey,
+              ),
             );
           },
         );
       }
+      imagePreviewWidget = RotatedBox(
+        quarterTurns: _rotationTurns,
+        child: visualImage,
+      );
     } else if (_currentImageUrl.isNotEmpty) {
-      imagePreviewWidget = Image.network(
-        _currentImageUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: Colors.grey[300],
-            child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
-          );
-        },
+      imagePreviewWidget = RotatedBox(
+        quarterTurns: _rotationTurns,
+        child: Image.network(
+          _currentImageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey[300],
+              child: const Icon(
+                Icons.broken_image,
+                size: 50,
+                color: Colors.grey,
+              ),
+            );
+          },
+        ),
       );
     } else {
       imagePreviewWidget = const Center(
@@ -227,21 +260,27 @@ class _EditItemDialogState extends State<EditItemDialog> {
               if (_suggestions.isNotEmpty) ...[
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(AppStrings.grammarSuggestionTitle, 
-                    style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  child: Text(
+                    AppStrings.grammarSuggestionTitle,
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 8.0,
-                  children: _suggestions.map((sug) => ChoiceChip(
-                    label: Text(sug),
-                    selected: _osastavController.text == sug,
-                    onSelected: (selected) {
-                      if (selected) {
-                        setState(() => _osastavController.text = sug);
-                      }
-                    },
-                  )).toList(),
+                  children: _suggestions
+                      .map(
+                        (sug) => ChoiceChip(
+                          label: Text(sug),
+                          selected: _osastavController.text == sug,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() => _osastavController.text = sug);
+                            }
+                          },
+                        ),
+                      )
+                      .toList(),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -252,7 +291,9 @@ class _EditItemDialogState extends State<EditItemDialog> {
                 decoration: InputDecoration(
                   labelText: AppStrings.grammarFormLabel,
                   helperText: AppStrings.grammarFormHelper,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 validator: null,
               ),
@@ -276,15 +317,30 @@ class _EditItemDialogState extends State<EditItemDialog> {
                 ),
               ),
               if (_pickedImage != null || _currentImageUrl.isNotEmpty)
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _pickedImage = null;
-                      _imageBytes = null;
-                      _currentImageUrl = '';
-                    });
-                  },
-                  child: const Text(AppStrings.removeImage),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _rotationTurns = (_rotationTurns + 1) % 4;
+                        });
+                      },
+                      icon: const Icon(Icons.rotate_right),
+                      label: const Text(AppStrings.turnPhoto),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _pickedImage = null;
+                          _imageBytes = null;
+                          _currentImageUrl = '';
+                          _rotationTurns = 0;
+                        });
+                      },
+                      child: const Text(AppStrings.removeImage),
+                    ),
+                  ],
                 ),
             ],
           ),
@@ -300,11 +356,12 @@ class _EditItemDialogState extends State<EditItemDialog> {
             if (_formKey.currentState!.validate()) {
               String? osastavValue = _osastavController.text.trim();
               if (osastavValue.isEmpty) osastavValue = null;
-              
+
               widget.onEditItem(
                 _wordController.text,
                 osastavValue,
                 _pickedImage,
+                _rotationTurns,
               );
               Navigator.of(context).pop();
             }

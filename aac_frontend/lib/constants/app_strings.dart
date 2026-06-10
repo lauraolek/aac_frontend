@@ -46,6 +46,7 @@ class AppStrings {
   static const String gallery = 'Galerii';
   static const String camera = 'Kaamera';
   static const String pickImageOrCapture = 'Vali pilt või tee foto';
+  static const String turnPhoto = 'Keera fotot';
 
   // Buttons
   static const String addButton = 'Lisa';

@@ -219,7 +219,7 @@ class ProfileProvider with ChangeNotifier {
 
   // --- Category Management for Active Profile (via API service) ---
 
-  Future<void> addCategory(String categoryName, {XFile? pickedImage}) async {
+  Future<void> addCategory(String categoryName, int imageRotationTurns, {XFile? pickedImage}) async {
     if (_activeProfile == null) {
       print(
         'ProfileProvider: Not logged in or no active profile to add category to.',
@@ -233,6 +233,7 @@ class ProfileProvider with ChangeNotifier {
       await _apiService.addCategory(
         _activeProfile!.id!,
         categoryName,
+        imageRotationTurns,
         imageFile: pickedImage,
       );
       await _fetchProfiles();
@@ -272,7 +273,8 @@ class ProfileProvider with ChangeNotifier {
 
   Future<void> editCategory(
     int categoryId,
-    String newName, {
+    String newName,
+    int imageRotationTurns, {
     XFile? newImageFile,
     String? currentImageUrl,
   }) async {
@@ -289,6 +291,7 @@ class ProfileProvider with ChangeNotifier {
         _activeProfile!.id!,
         categoryId,
         newName,
+        imageRotationTurns,
         newImageFile: newImageFile,
         currentImageUrl: currentImageUrl,
       );
@@ -309,9 +312,11 @@ class ProfileProvider with ChangeNotifier {
   Future<void> addItemToCategory(
     int categoryId,
     String word, 
-    String? wordOsastav, {
+    String? wordOsastav,
+    int imageRotationTurns, {
     XFile? pickedImage,
-  }) async {
+  }
+  ) async {
     if (_activeProfile == null) {
       print(
         'ProfileProvider: Not logged in or no active profile to add item to.',
@@ -327,6 +332,7 @@ class ProfileProvider with ChangeNotifier {
         categoryId,
         word,
         wordOsastav,
+        imageRotationTurns,
         imageFile: pickedImage,
       );
       await _fetchProfiles();
@@ -372,7 +378,8 @@ class ProfileProvider with ChangeNotifier {
     int categoryId,
     int itemId,
     String newWord,
-    String? newWordOsastav, {
+    String? newWordOsastav,
+    int? imageRotationTurns, {
     XFile? newImageFile,
     String? currentImageUrl,
   }) async {
@@ -391,6 +398,7 @@ class ProfileProvider with ChangeNotifier {
         itemId,
         newWord,
         newWordOsastav,
+        imageRotationTurns,
         newImageFile: newImageFile,
         currentImageUrl: currentImageUrl,
       );

@@ -7,7 +7,12 @@ import 'package:image_picker/image_picker.dart';
 import '../constants/app_strings.dart';
 
 typedef AddItemCallback =
-    void Function(String word, String? wordOsastav, XFile? imageFile);
+    void Function(
+      String word,
+      String? wordOsastav,
+      XFile? imageFile,
+      int imageRotationTurns,
+    );
 
 class AddItemDialog extends StatefulWidget {
   final AddItemCallback onAddItem;
@@ -33,14 +38,18 @@ class _AddItemDialogState extends State<AddItemDialog> {
 
   XFile? _pickedImage;
   Uint8List? _imageBytes;
+  int _rotationTurns = 0; // Tracks manual rotations: 0 = 0°, 1 = 90°, 2 = 180°, 3 = 270°
   final ImagePicker _picker = ImagePicker();
 
   void _onWordChanged(String val) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
     _debounce = Timer(const Duration(milliseconds: 600), () async {
-      if (val.length < 2) {
-        setState(() => _suggestions = []);
+      if (val.trim().length < 2) {
+        setState(() {
+          _suggestions = [];
+          _osastavController.clear();
+        });
         return;
       }
 
@@ -51,6 +60,8 @@ class _AddItemDialogState extends State<AddItemDialog> {
           _suggestions = results;
           if (_suggestions.isNotEmpty) {
             _osastavController.text = _suggestions.first;
+          } else {
+            _osastavController.clear();
           }
         });
       }
@@ -67,6 +78,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
       _pickedImage = pickedFile;
       _imageBytes = bytes;
       _showImageError = false;
+      _rotationTurns = 0;
     });
   }
 
@@ -138,8 +150,9 @@ class _AddItemDialogState extends State<AddItemDialog> {
   Widget build(BuildContext context) {
     Widget imagePreviewWidget;
     if (_pickedImage != null) {
+      Widget visualImage;
       if (kIsWeb) {
-        imagePreviewWidget = Image.memory(
+        visualImage = Image.memory(
           _imageBytes!,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
@@ -154,7 +167,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
           },
         );
       } else {
-        imagePreviewWidget = Image.file(
+        visualImage = Image.file(
           File(_pickedImage!.path),
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
@@ -169,6 +182,12 @@ class _AddItemDialogState extends State<AddItemDialog> {
           },
         );
       }
+
+      // Wraps visual target inside RotatedBox matching the user turns
+      imagePreviewWidget = RotatedBox(
+        quarterTurns: _rotationTurns,
+        child: visualImage,
+      );
     } else {
       imagePreviewWidget = const Center(
         child: Column(
@@ -198,7 +217,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                 ),
                 onChanged: _onWordChanged,
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
+                  if (value == null || value.trim().isEmpty) {
                     return AppStrings.enterItemWord;
                   }
                   return null;
@@ -274,22 +293,46 @@ class _AddItemDialogState extends State<AddItemDialog> {
               ),
               if (_showImageError)
                 Padding(
-                  padding: EdgeInsets.only(top: 8.0),
+                  padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
                     AppStrings.imageRequired,
                     style: TextStyle(color: Colors.red.shade900, fontSize: 14),
                   ),
                 ),
-              if (_pickedImage != null)
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _pickedImage = null;
-                      _imageBytes = null;
-                    });
-                  },
-                  child: const Text(AppStrings.removeImage),
+
+              if (_pickedImage != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Manual Rotation Button
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _rotationTurns = (_rotationTurns + 1) % 4;
+                        });
+                      },
+                      icon: const Icon(Icons.rotate_right),
+                      label: const Text(AppStrings.turnPhoto),
+                    ),
+                    // Remove Image Button
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _pickedImage = null;
+                          _imageBytes = null;
+                          _rotationTurns = 0;
+                        });
+                      },
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      label: const Text(
+                        AppStrings.removeImage,
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
                 ),
+              ],
             ],
           ),
         ),
@@ -313,9 +356,10 @@ class _AddItemDialogState extends State<AddItemDialog> {
               if (osastavValue.isEmpty) osastavValue = null;
 
               widget.onAddItem(
-                _wordController.text,
+                _wordController.text.trim(),
                 osastavValue,
                 _pickedImage,
+                _rotationTurns,
               );
               Navigator.of(context).pop();
             }

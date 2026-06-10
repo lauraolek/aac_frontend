@@ -5,7 +5,8 @@ import 'dart:io';
 import '../constants/app_strings.dart';
 import '../models/category.dart';
 
-typedef EditCategoryCallback = void Function(String name, XFile? imageFile);
+typedef EditCategoryCallback =
+    void Function(String name, int rotationTurns, XFile? imageFile);
 
 class EditCategoryDialog extends StatefulWidget {
   final Category category;
@@ -24,6 +25,7 @@ class EditCategoryDialog extends StatefulWidget {
 class _EditCategoryDialogState extends State<EditCategoryDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
+  int _rotationTurns = 0;
   XFile? _pickedImage;
   Uint8List? _imageBytes; // for web image preview
   late String _currentImageUrl;
@@ -34,8 +36,8 @@ class _EditCategoryDialogState extends State<EditCategoryDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.category.name);
     _currentImageUrl = widget.category.imageUrl;
+    _rotationTurns = 0;
   }
-
 
   Future<void> _processPickedImage(XFile pickedFile) async {
     Uint8List? bytes;
@@ -47,6 +49,7 @@ class _EditCategoryDialogState extends State<EditCategoryDialog> {
       _pickedImage = pickedFile;
       _imageBytes = bytes;
       _currentImageUrl = '';
+      _rotationTurns = 0;
     });
   }
 
@@ -116,39 +119,59 @@ class _EditCategoryDialogState extends State<EditCategoryDialog> {
   Widget build(BuildContext context) {
     Widget imagePreviewWidget;
     if (_pickedImage != null) {
+      Widget visualImage;
       if (kIsWeb) {
-        imagePreviewWidget = Image.memory(
+        visualImage = Image.memory(
           _imageBytes!,
           fit: BoxFit.fitHeight,
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
-              child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+              child: const Icon(
+                Icons.broken_image,
+                size: 50,
+                color: Colors.grey,
+              ),
             );
           },
         );
       } else {
-        imagePreviewWidget = Image.file(
+        visualImage = Image.file(
           File(_pickedImage!.path),
           fit: BoxFit.fitHeight,
           errorBuilder: (context, error, stackTrace) {
             return Container(
               color: Colors.grey[300],
-              child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+              child: const Icon(
+                Icons.broken_image,
+                size: 50,
+                color: Colors.grey,
+              ),
             );
           },
         );
       }
+      imagePreviewWidget = RotatedBox(
+        quarterTurns: _rotationTurns,
+        child: visualImage,
+      );
     } else if (_currentImageUrl.isNotEmpty) {
-      imagePreviewWidget = Image.network(
-        _currentImageUrl,
-        fit: BoxFit.fitHeight,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: Colors.grey[300],
-            child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
-          );
-        },
+      imagePreviewWidget = RotatedBox(
+        quarterTurns: _rotationTurns,
+        child: Image.network(
+          _currentImageUrl,
+          fit: BoxFit.fitHeight,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey[300],
+              child: const Icon(
+                Icons.broken_image,
+                size: 50,
+                color: Colors.grey,
+              ),
+            );
+          },
+        ),
       );
     } else {
       imagePreviewWidget = const Center(
@@ -206,15 +229,30 @@ class _EditCategoryDialogState extends State<EditCategoryDialog> {
                 ),
               ),
               if (_pickedImage != null || _currentImageUrl.isNotEmpty)
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _pickedImage = null;
-                      _imageBytes = null;
-                      _currentImageUrl = '';
-                    });
-                  },
-                  child: const Text(AppStrings.removeImage),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _rotationTurns = (_rotationTurns + 1) % 4;
+                        });
+                      },
+                      icon: const Icon(Icons.rotate_right),
+                      label: const Text(AppStrings.turnPhoto),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _pickedImage = null;
+                          _imageBytes = null;
+                          _currentImageUrl = '';
+                          _rotationTurns = 0;
+                        });
+                      },
+                      child: const Text(AppStrings.removeImage),
+                    ),
+                  ],
                 ),
             ],
           ),
@@ -230,6 +268,7 @@ class _EditCategoryDialogState extends State<EditCategoryDialog> {
             if (_formKey.currentState!.validate()) {
               widget.onEditCategory(
                 _nameController.text,
+                _rotationTurns,
                 _pickedImage,
               );
               Navigator.of(context).pop();

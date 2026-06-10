@@ -44,14 +44,16 @@ class CategoryGridScreen extends StatelessWidget {
                     context: context,
                     builder: (dialogContext) => EditCategoryDialog(
                       category: category,
-                      onEditCategory: (newName, newImageFile) async {
-                        await profileProvider.editCategory(
-                          category.id!,
-                          newName,
-                          newImageFile: newImageFile,
-                          currentImageUrl: category.imageUrl,
-                        );
-                      },
+                      onEditCategory:
+                          (newName, rotationTurns, newImageFile) async {
+                            await profileProvider.editCategory(
+                              category.id!,
+                              newName,
+                              rotationTurns,
+                              newImageFile: newImageFile,
+                              currentImageUrl: category.imageUrl,
+                            );
+                          },
                     ),
                   );
                 },
@@ -121,12 +123,14 @@ class CategoryGridScreen extends StatelessWidget {
                           showDialog(
                             context: context,
                             builder: (context) => AddCategoryDialog(
-                              onAddCategory: (name, imageFile) async {
-                                await profileProvider.addCategory(
-                                  name,
-                                  pickedImage: imageFile,
-                                );
-                              },
+                              onAddCategory:
+                                  (name, rotationTurns, imageFile) async {
+                                    await profileProvider.addCategory(
+                                      name,
+                                      rotationTurns,
+                                      pickedImage: imageFile,
+                                    );
+                                  },
                             ),
                           );
                         },
@@ -149,10 +153,11 @@ class CategoryGridScreen extends StatelessWidget {
                 // https://medium.com/@rk0936626/use-responsive-grid-in-flutter-that-adjust-itself-based-on-screen-size-65b91c049fb0
                 builder: (context, constraints) {
                   final int categoryTargetWidth = 130;
-                  final int columns = (constraints.maxWidth / categoryTargetWidth)
-                      .floor()
-                      .clamp(1, double.infinity)
-                      .toInt();
+                  final int columns =
+                      (constraints.maxWidth / categoryTargetWidth)
+                          .floor()
+                          .clamp(1, double.infinity)
+                          .toInt();
                   return GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: columns,
@@ -184,9 +189,10 @@ class CategoryGridScreen extends StatelessWidget {
                 showDialog(
                   context: context,
                   builder: (context) => AddCategoryDialog(
-                    onAddCategory: (name, imageFile) async {
+                    onAddCategory: (name, rotationTurns, imageFile) async {
                       await profileProvider.addCategory(
                         name,
+                        rotationTurns,
                         pickedImage: imageFile,
                       );
                     },

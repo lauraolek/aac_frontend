@@ -45,16 +45,23 @@ class ItemListScreen extends StatelessWidget {
                     builder: (dialogContext) => EditItemDialog(
                       item: item,
                       apiService: profileProvider.apiService,
-                      onEditItem: (newWord, newWordOsastav, newImageFile) async {
-                        await profileProvider.editItemInCategory(
-                          category.id!,
-                          item.id!,
-                          newWord,
-                          newWordOsastav,
-                          newImageFile: newImageFile,
-                          currentImageUrl: item.imageUrl,
-                        );
-                      },
+                      onEditItem:
+                          (
+                            newWord,
+                            newWordOsastav,
+                            newImageFile,
+                            rotationTurns,
+                          ) async {
+                            await profileProvider.editItemInCategory(
+                              category.id!,
+                              item.id!,
+                              newWord,
+                              newWordOsastav,
+                              rotationTurns,
+                              newImageFile: newImageFile,
+                              currentImageUrl: item.imageUrl,
+                            );
+                          },
                     ),
                   );
                 },
@@ -111,11 +118,7 @@ class ItemListScreen extends StatelessWidget {
     final bool isReadOnly = profileProvider.isChildMode;
 
     final currentCategoryInProfile = profileProvider.activeProfile?.categories
-        .firstWhere(
-          (cat) => cat.id == category.id,
-          orElse: () =>
-              category, // fallback if category was deleted or profile changed
-        );
+        .firstWhere((cat) => cat.id == category.id, orElse: () => category);
     final List<CommunicationItem> items = currentCategoryInProfile?.items ?? [];
 
     return PopScope(
@@ -168,15 +171,20 @@ class ItemListScreen extends StatelessWidget {
                   showDialog(
                     context: context,
                     builder: (context) => AddItemDialog(
-                      apiService: Provider.of<ProfileProvider>(context, listen: false).apiService,
-                      onAddItem: (word, wordOsastav, imageFile) async {
-                        await profileProvider.addItemToCategory(
-                          category.id!,
-                          word,
-                          wordOsastav,
-                          pickedImage: imageFile,
-                        );
-                      },
+                      apiService: Provider.of<ProfileProvider>(
+                        context,
+                        listen: false,
+                      ).apiService,
+                      onAddItem:
+                          (word, wordOsastav, imageFile, rotationTurns) async {
+                            await profileProvider.addItemToCategory(
+                              category.id!,
+                              word,
+                              wordOsastav,
+                              rotationTurns,
+                              pickedImage: imageFile,
+                            );
+                          },
                     ),
                   );
                 },
