@@ -25,11 +25,13 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _handleForgotPassword() async {
     final currentEmail = _emailController.text.trim();
-    
+
     showDialog(
       context: context,
       builder: (ctx) {
-        final TextEditingController resetController = TextEditingController(text: currentEmail);
+        final TextEditingController resetController = TextEditingController(
+          text: currentEmail,
+        );
         bool isDialogLoading = false;
         String? dialogErrorText;
 
@@ -70,33 +72,40 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: const Text(AppStrings.cancelButton),
                 ),
                 ElevatedButton(
-                  onPressed: isDialogLoading 
-                    ? null 
-                    : () async {
-                        final email = resetController.text.trim();
-                        
-                        if (email.isEmpty || !email.contains('@')) {
-                          setDialogState(() => dialogErrorText = AppStrings.pleaseEnterValidEmail);
-                          return;
-                        }
+                  onPressed: isDialogLoading
+                      ? null
+                      : () async {
+                          final email = resetController.text.trim();
 
-                        setDialogState(() => isDialogLoading = true);
-                        
-                        try {
-                          await Provider.of<ProfileProvider>(context, listen: false)
-                              .sendPasswordResetEmail(email);
-                          
-                          if (context.mounted) {
-                            Navigator.pop(context); // Close reset input dialog
-                            _showSuccessDialog();    // Call the helper below
+                          if (email.isEmpty || !email.contains('@')) {
+                            setDialogState(
+                              () => dialogErrorText =
+                                  AppStrings.pleaseEnterValidEmail,
+                            );
+                            return;
                           }
-                        } catch (e) {
-                          setDialogState(() {
-                            isDialogLoading = false;
-                            dialogErrorText = e.toString();
-                          });
-                        }
-                      },
+
+                          setDialogState(() => isDialogLoading = true);
+
+                          try {
+                            await Provider.of<ProfileProvider>(
+                              context,
+                              listen: false,
+                            ).sendPasswordResetEmail(email);
+
+                            if (context.mounted) {
+                              Navigator.pop(
+                                context,
+                              ); // Close reset input dialog
+                              _showSuccessDialog(); // Call the helper below
+                            }
+                          } catch (e) {
+                            setDialogState(() {
+                              isDialogLoading = false;
+                              dialogErrorText = e.toString();
+                            });
+                          }
+                        },
                   child: const Text(AppStrings.confirmButton),
                 ),
               ],
@@ -195,110 +204,123 @@ class _AuthScreenState extends State<AuthScreen> {
               padding: const EdgeInsets.all(20.0),
               child: Form(
                 key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _isLogin
-                          ? AppStrings.welcomeBack
-                          : AppStrings.createAccount,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(
-                        labelText: AppStrings.email,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: const Icon(Icons.email),
-                      ),
-                      validator: (value) {
-                        if (value == null || !value.contains('@')) {
-                          return AppStrings.pleaseEnterValidEmail;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 15),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _submitAuthForm(),
-                      decoration: InputDecoration(
-                        labelText: AppStrings.password,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon: const Icon(Icons.lock),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.length < 12) {
-                          return AppStrings.passwordTooShort;
-                        }
-                        return null;
-                      },
-                    ),
-                    if (_isLogin)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _handleForgotPassword, // Opens the new dialog
-                          child: const Text(
-                            AppStrings.forgotPassword,
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 25),
-                    profileProvider.isLoading
-                        ? const CircularProgressIndicator()
-                        : ElevatedButton(
-                            onPressed: _submitAuthForm,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade600,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 40,
-                                vertical: 15,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              textStyle: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            child: Text(
-                              _isLogin
-                                  ? AppStrings.loginButton
-                                  : AppStrings.registerButton,
-                            ),
-                          ),
-                    const SizedBox(height: 15),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _isLogin = !_isLogin;
-                        });
-                      },
-                      child: Text(
+                child: AutofillGroup(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
                         _isLogin
-                            ? AppStrings.createAccountPrompt
-                            : AppStrings.alreadyHaveAccountPrompt,
-                        style: TextStyle(color: Colors.blue.shade700),
+                            ? AppStrings.welcomeBack
+                            : AppStrings.createAccount,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 15),
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        autofillHints: const [
+                          AutofillHints.email,
+                        ],
+                        decoration: InputDecoration(
+                          labelText: AppStrings.email,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          prefixIcon: const Icon(Icons.email),
+                        ),
+                        validator: (value) {
+                          if (value == null || !value.contains('@')) {
+                            return AppStrings.pleaseEnterValidEmail;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 15),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _submitAuthForm(),
+                        autofillHints: _isLogin
+                            ? const [AutofillHints.password]
+                            : const [
+                                AutofillHints.newPassword,
+                              ],
+                        decoration: InputDecoration(
+                          labelText: AppStrings.password,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          prefixIcon: const Icon(Icons.lock),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.length < 12) {
+                            return AppStrings.passwordTooShort;
+                          }
+                          return null;
+                        },
+                      ),
+                      if (_isLogin)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _handleForgotPassword, // Opens the new dialog
+                            child: const Text(
+                              AppStrings.forgotPassword,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 25),
+                      profileProvider.isLoading
+                          ? const CircularProgressIndicator()
+                          : ElevatedButton(
+                              onPressed: _submitAuthForm,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue.shade600,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 40,
+                                  vertical: 15,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              child: Text(
+                                _isLogin
+                                    ? AppStrings.loginButton
+                                    : AppStrings.registerButton,
+                              ),
+                            ),
+                      const SizedBox(height: 15),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _isLogin = !_isLogin;
+                          });
+                        },
+                        child: Text(
+                          _isLogin
+                              ? AppStrings.createAccountPrompt
+                              : AppStrings.alreadyHaveAccountPrompt,
+                          style: TextStyle(color: Colors.blue.shade700),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
